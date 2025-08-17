@@ -1,0 +1,85 @@
+.table-wrapper {
+  overflow-x: auto;
+  padding-bottom: 9px;
+
+  @include customScrollbarHorizontal();
+}
+
+table:not([class]),
+table.table {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  @screen md {
+    font-size: 16px;
+  }
+
+  @screen 3xl {
+    font-size: 18px;
+  }
+
+  thead {
+    tr {
+      border-bottom: 1px solid var(--black);
+    }
+
+    th {
+      padding: 8px;
+      padding-top: 0;
+      color: var(--red);
+      
+      @screen md {
+        padding: 12px;
+      }
+      
+      &:not(:last-child) {
+        border-right: 1px solid rgba(0,0,0,0.2);
+      }
+
+      &:first-child {
+        border-right: 1px solid rgba(0,0,0,1);
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      &:not(:last-child) {
+        border-bottom: 1px solid rgba(0,0,0,0.2);
+      }
+    }
+    
+    th {
+      border-right: 1px solid rgba(0,0,0,1);
+      color: var(--red);
+      min-width: 80px;
+
+      @screen md {
+        min-width: 120px;
+      }
+    }
+
+    td {
+      min-width: 80px;
+      
+      @screen md {
+        min-width: 120px;
+      }
+
+      &:not(:last-child) {
+        border-right: 1px solid rgba(0,0,0,0.2);
+      }
+    }
+
+    th, td {
+      padding: 8px;
+
+      @screen md {
+        padding: 12px;
+      }
+    }
+  }
+}

@@ -1,0 +1,136 @@
+:root {
+  --containerExtraSmallWidth: calc(100% - 36px);
+  --containerSmallWidth: calc(100% - 36px);
+  --containerWidth: calc(100% - 36px);
+  --containerLargeWidth: calc(100% - 36px);
+  --containerExtraLargeWidth: calc(100% - 36px);
+
+  --xSmallContainerMaxWidth: 600px;
+  --smallContainerMaxWidth: 720px;
+  --containerMaxWidth: 912px;
+  --largeContainerMaxWidth: 1008px;
+  --xLargeContainerMaxWidth: 1104px;
+
+  @screen md {
+    --containerExtraSmallWidth: calc(100% - 96px);
+    --containerSmallWidth: calc(100% - 96px);
+    --containerWidth: calc(100% - 96px);
+    --containerLargeWidth: calc(100% - 96px);
+    --containerExtraLargeWidth: calc(100% - 96px);
+  }
+  
+  @screen xl {
+    --containerExtraSmallWidth: calc(100% - 600px);
+    --containerSmallWidth: calc(100% - 480px);
+    --containerWidth: calc(100% - 288px);
+    --containerLargeWidth: calc(100% - 192px);
+    --containerExtraLargeWidth: calc(100% - 96px);
+
+    --xSmallContainerMaxWidth: 798px;
+    --smallContainerMaxWidth: 942px;
+    --containerMaxWidth: 1440px;
+    --largeContainerMaxWidth: 1632px;
+    --xLargeContainerMaxWidth: 1800px;
+  }
+
+  @screen 3xl {
+    --containerExtraSmallWidth: calc(100% - 1122px);
+    --containerSmallWidth: calc(100% - 978px);
+    --containerWidth: calc(100% - 480px);
+    --containerLargeWidth: calc(100% - 288px);
+    --containerExtraLargeWidth: calc(100% - 120px);
+  }
+}
+
+.container {
+  position: relative;
+  margin-left: auto;
+  margin-right: auto;
+
+  width: var(--containerWidth);
+  max-width: var(--containerMaxWidth);
+
+  &-extra-small {
+    @extend .container;
+    width: var(--containerExtraSmallWidth);
+    max-width: var(--xSmallContainerMaxWidth);
+  }
+  
+  &-small {
+    @extend .container;
+    width: var(--containerSmallWidth);
+    max-width: var(--smallContainerMaxWidth);
+  }
+
+  &-large {
+    @extend .container;
+    width: var(--containerLargeWidth);
+    max-width: var(--largeContainerMaxWidth);
+  }
+  
+  &-extra-large {
+    @extend .container;
+    width: var(--containerExtraLargeWidth);
+    max-width: var(--xLargeContainerMaxWidth);
+  }
+  
+  &-fluid {
+    width: 100%;
+    max-width: unset;
+  }
+
+
+  // edge image sections
+  &-fluid-right {
+    width: 100%;
+    max-width: unset;
+
+    @screen xl {
+      position: relative;
+      width: calc((100vw - var(--containerWidth)) / 2 + var(--containerWidth));
+      margin-left: auto;
+      margin-right: 0;
+    }
+  }
+  
+  &-fluid-left {
+    width: 100%;
+    max-width: unset;
+
+    @screen xl {
+      position: relative;
+      width: calc((100vw - var(--containerWidth)) / 2 + var(--containerWidth));
+      margin-left: 0;
+      margin-right: auto;
+    }
+  }
+
+  // categories menu bar
+  &-large-fluid-right {
+    position: relative;
+    width: calc(100% - 18px);
+    margin-left: auto;
+    margin-right: 0;
+
+    @screen md {
+      width: calc(100% - 48px);
+    }
+
+    @screen xl {
+      position: relative;
+      width: calc(((100vw - var(--containerLargeWidth)) / 2) + var(--containerLargeWidth));
+      max-width: calc(((100vw - var(--largeContainerMaxWidth)) / 2) + var(--largeContainerMaxWidth));
+    }
+    
+    &--scrollbar {
+      @include customScrollbarHorizontal(8px, var(--black), var(--yellow), 0, 18px);
+      
+      padding-bottom: 8px;
+      overflow-x: auto;
+      
+      @screen md {
+        @include customScrollbarHorizontal(12px, var(--black), var(--yellow), 0, 48px);
+      }
+    }
+  }
+}

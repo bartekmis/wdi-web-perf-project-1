@@ -1,0 +1,101 @@
+.card {
+  $block-name: '.card';
+  width: 100%;
+  background-color: var(--black);
+  padding: 12px;
+  margin: 1px;
+  border-radius: 72px;
+  display: flex;
+  border: 1px solid transparent;
+  transition: border .3s ease;
+  background-color: var(--blackSecondary);
+
+  @screen xl {
+    border-radius: 96px;
+  }
+
+  @screen 3xl {
+    border-radius: 110px;
+  }
+  
+  @screen 4xl {
+    border-radius: 129px;
+  }
+
+  &:hover {
+    border: 1px solid var(--yellow);
+
+    #{$block-name}__image {
+      &--static {
+        opacity: 0;
+      }
+    }
+
+    #{$block-name}__title {
+      color: var(--yellow);
+    }
+  }
+
+  &__figure-wrapper {
+    position: relative;
+    overflow: hidden;
+    width: 40%;
+    padding-bottom: 53%;
+    border-radius: 72px;
+      
+    @screen xl {
+      border-radius: 96px;
+    }
+
+    @screen 3xl {
+      border-radius: 110px;
+    }
+    
+    @screen 4xl {
+      border-radius: 129px;
+    }
+  }
+
+  &__figure {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    
+    #{$block-name}__image {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: grayscale(1);
+      
+      &--static {
+        transition: opacity .3s ease;
+        opacity: 1;
+      }
+      
+      &--hover {
+        mix-blend-mode: multiply;
+      }
+    }
+  }
+
+  &__content {
+    width: 60%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-left: 12px;
+
+    @screen sm {
+      margin-left: 24px;
+    }
+    
+    @screen 3xl {
+      margin-left: 60px;
+    }
+  }
+
+  &__title {
+    transition: color .3s ease;
+  }
+}

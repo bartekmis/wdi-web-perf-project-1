@@ -1,0 +1,26 @@
+@use 'styles/mixins';
+
+.dropdown {
+  $block-name: '.dropdown';
+  position: relative;
+
+  &__content {
+    @include mixins.transition(opacity, transform);
+
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(20%);
+  }
+
+  &.open {
+    #{$block-name}__content {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: all;
+    }
+  }
+}

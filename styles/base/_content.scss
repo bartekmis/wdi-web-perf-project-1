@@ -1,0 +1,183 @@
+.content {
+  p,
+  li,
+  td,
+  span {
+    font-size: 14px;
+    line-height: 24px;
+    font-weight: 400;
+    letter-spacing: 0;
+
+    @screen md {
+      font-size: 16px;
+      line-height: 28px;
+    }
+
+    @screen 3xl {
+      font-size: 18px;
+      line-height: 30px;
+    }
+  }
+
+  .text-small & > p,
+  .text-small & > li,
+  .text-small & > td,
+  .text-small & > span,
+  &--text-small > p,
+  &--text-small > li,
+  &--text-small > td,
+  &--text-small > span,
+  .text-small {
+    font-size: 12px;
+    line-height: 21px;
+
+    @screen 3xl {
+      font-size: 14px;
+      line-height: 24px;
+    }
+  }
+
+  .text-large & > p,
+  .text-large & > li,
+  .text-large & > td,
+  .text-large & > span,
+  &--text-large > p,
+  &--text-large > li,
+  &--text-large > td,
+  &--text-large > span,
+  .text-large {
+    font-size: 20px;
+    line-height: 35px;
+
+    @screen 3xl {
+      font-size: 30px;
+      line-height: 48px;
+    }
+  }
+
+  [class^='headline-'] {
+    &:not(:last-child) {
+      margin-bottom: 1em;
+    }
+  }
+  
+  p {
+    word-break: break-word;
+  }
+
+  p,
+  blockquote {
+    &:not(:last-child) {
+      margin-bottom: 1em;
+    }
+  }
+
+  a {
+    text-decoration: underline;
+    color: var(--redSecondary);
+  }
+
+  img {
+    margin-bottom: 2em;
+  }
+
+  ul,
+  ol {
+    margin-top: 1em;
+    margin-bottom: 1em;
+
+    li {
+      position: relative;
+      margin-bottom: 0;
+
+      &:before {
+        content: '';
+        display: block;
+        position: absolute;
+        overflow: hidden;
+      }
+
+      &:last-child {
+        padding-bottom: 0;
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  ul {
+    padding-left: 30px;
+
+    li {
+      &:before {
+        content: '';
+        top: 12px;
+        width: 10px;
+        height: 1px;
+        left: -30px;
+        background-color: var(--redSecondary);
+
+        @screen md {
+          top: 14px;
+        }
+
+        @screen 3xl {
+          top: 15px;
+        }
+      }
+    }
+  }
+
+  // To manually set <ol> to e.g.: start=5, use the style below:
+  // <ol style="counter-reset: item 4;">
+
+  ol {
+    counter-reset: item;
+    padding-left: 30px;
+
+    li {
+      counter-increment: item;
+      
+      &:before {
+        content: counters(item, '.') '. ';
+        left: -30px;
+        font-weight: 700;
+        color: var(--redSecondary);
+      }
+
+      > ol {
+        padding-left: 40px;
+
+        li {
+          &::before {
+            left: -40px;
+          }
+          
+          > ol {
+            padding-left: 50px;
+    
+            li {
+              &::before {
+                left: -50px;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  blockquote {
+    position: relative;
+    padding-left: 72px;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 48px;
+      height: 48px;
+      background: url('/quote.png') no-repeat center center / contain;
+    }
+  }
+}

@@ -1,0 +1,131 @@
+.swiper-navigation {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  z-index: 1;
+  pointer-events: none;
+
+  &__wrapper {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  &__btn {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 36px;
+    height: 36px;
+    background-color: var(--black);
+    color: var(--white);
+    border-radius: 50%;
+    pointer-events: all;
+    overflow: hidden;
+    
+    @screen md {
+      width: 48px;
+      height: 48px;
+    }
+
+    @screen xl {
+      width: 60px;
+      height: 60px;
+    }
+
+    @screen 3xl {
+      width: 72px;
+      height: 72px;
+    }
+
+    &:hover {
+      .icon-wrapper {
+        animation-name: rollRight;
+        animation-duration: .7s;
+        animation-timing-function: linear;
+        animation-play-state: running;
+        animation-iteration-count: infinite;
+        
+        .icon,
+        .icon-duplicate {
+          color: var(--yellow);
+        }
+      }
+    }
+    
+    .icon-wrapper {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      
+      .icon,
+      .icon-duplicate {
+        @include transition(color);
+        width: 100%;
+        height: 12px;
+
+        @screen md {
+          height: 16px;
+        }
+        
+        @screen xl {
+          height: 20px;
+        }
+
+        @screen 3xl {
+          height: 24px;
+        }
+      }
+
+      .icon-duplicate {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        right: 100%;
+      }
+    }
+
+    &--prev {
+      transform: rotate(-180deg);
+    }
+  }
+  
+  @keyframes rollRight {
+    0% {
+      transform: translateX(0%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+}
+
+.swiper-process {
+  .swiper-slide-thumb-active {
+    button {
+      background-color: var(--yellow);
+    }
+  }
+
+  .swiper-navigation {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+    z-index: 1;
+    pointer-events: none;
+    
+    &__wrapper {
+      display: flex;
+      justify-content: space-between;
+    }
+  }
+}
+
+.swiper-autoplay {
+  .swiper-wrapper {
+    transition-timing-function: linear !important;
+  }
+}
+

@@ -1,0 +1,20 @@
+@use 'styles/mixins';
+
+.social-icon {
+  @include mixins.flexCenter();
+  @include mixins.transition(background-color);
+
+  padding: 4px;
+  background-color: var(--white);
+  border-radius: 4px;
+
+  &:hover {
+    background-color: var(--yellow);
+  }
+
+  svg {
+    fill: var(--black);
+    width: 28px;
+    height: 28px;
+  }
+}

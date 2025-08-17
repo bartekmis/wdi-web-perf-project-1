@@ -1,0 +1,7 @@
+$bgColorsWhiteFont: ('black', 'blackSecondary');
+
+@each $colorName in $bgColorsWhiteFont {
+  .bg-#{$colorName} {
+    color: theme('colors.white');
+  }
+}

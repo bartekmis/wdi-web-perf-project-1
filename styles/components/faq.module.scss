@@ -1,0 +1,84 @@
+@use 'styles/mixins';
+
+.faq-group {
+  background-color: var(--white);
+  border-radius: 24px;
+  padding: 36px;
+
+  @screen md {
+    padding: 48px;
+    border-radius: 48px;
+  }
+  
+  .trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    &:hover {
+      .icon-wrapper {
+        background-color: var(--yellow);
+      }
+    }
+  }
+
+  .accordion {
+    padding: 36px 0;
+    border-bottom: 1px solid var(--black);
+
+    &:first-child {
+      padding-top: 0;
+    }
+
+    &:last-child {
+      padding-bottom: 0;
+      border: 0;
+    }
+
+    .icon-wrapper {
+      @include mixins.transition(background-color);
+
+      position: relative;
+      width: 48px;
+      height: 48px;
+      background-color: var(--lightGrey);
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      .icon {
+        @include mixins.transition(opacity);
+
+        &--close {
+          position: absolute;
+          opacity: 0;
+        }
+      }
+    }
+
+    &.open {
+      .icon {
+        &--open {
+          opacity: 0;
+        }
+
+        &--close {
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  &--secondary {
+    background-color: var(--lightGrey);
+
+    .accordion {
+      .icon-wrapper {
+        background-color: var(--white);
+      }
+    }
+  }
+}

@@ -1,0 +1,74 @@
+@use 'sass:math';
+
+@mixin fullHeight {
+  height: 100vh;
+
+  @supports (-webkit-overflow-scrolling: touch) {
+      height: calc(var(--vh, 1vh) * 100);
+  }
+}
+
+@mixin transition($property...) {
+  transition: transform var(--transitionDuration) var(--transitionTiming);
+  transition-property: $property;
+}
+
+@mixin flexCenter() {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin spreadChildren($size, $axis) {
+  @if $axis == y {
+      margin-bottom: -$size !important;
+      & > * {
+          margin-bottom: $size !important;
+      }
+  } @else if $axis == x {
+      margin-right: -$size !important;
+      & > * {
+          margin-right: $size !important;
+      }
+  }
+}
+
+@mixin customScrollbar($width: 6px, $colour: var(--black), $colorThumb: var(--yellow), $margin: 10px) {
+  &::-webkit-scrollbar {
+      width: $width;
+  }
+  
+  &::-webkit-scrollbar-track {
+      background: $colour;
+      background-clip: padding-box;
+      border-left: math.div($width, 4) solid transparent;
+      border-right: math.div($width, 4) solid transparent;
+      border-radius: 42px;
+      margin: $margin 0;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+      background-color: $colorThumb;
+      border-radius: 42px;
+  }
+}
+
+@mixin customScrollbarHorizontal($height: 12px, $colour: var(--black), $colourThumb: var(--yellow), $marginLeft: 0, $marginRight: 0) {
+  &::-webkit-scrollbar {
+      height: $height;        
+  }
+
+  &::-webkit-scrollbar-track {
+      background: $colour;
+      background-clip: padding-box;
+      border-top: math.div($height, 4) solid transparent;
+      border-bottom: math.div($height, 4) solid transparent;
+      border-radius: 42px;
+      margin: 0 $marginRight 0 $marginLeft;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+      background-color: $colourThumb;
+      border-radius: 42px;
+  }
+}

@@ -1,0 +1,239 @@
+.btn {
+  $block-name: '.btn';
+  position: relative;
+  display: inline-block;
+  font-weight: 700;
+  line-height: 1;
+  border-radius: 41px;
+  overflow: hidden;
+  white-space: nowrap;
+
+  &__text {
+    position: relative;
+    overflow: hidden;
+    display: block;
+    color: var(--black);
+
+    & > span {
+      display: inline-block;
+    }
+  }
+
+  &__bg {
+    transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0s;
+
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    & > span {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      width: 100%;
+      height: 100%;
+
+      transform: scaleY(1);
+      transform-origin: 50% 0px;
+      overflow: hidden;
+
+      &::before,
+      &::after {
+        content: '';
+        transform: translateY(100%);
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        width: 100%;
+        height: 100%;
+      }
+    }
+  }
+
+  // Hover effects
+
+  &:hover {
+    #{$block-name}__bg {
+      & > span {
+        transform: scaleY(0);
+        transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0s;
+
+        &::before,
+        &::after {
+          transform: translateY(0%);
+          transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0s;
+        }
+
+        &::after {
+          transition-delay: 0.1s;
+          transition-duration: 0.4s;
+        }
+      }
+    }
+  }
+
+  &--effect {
+    [data-hover] {
+      position: relative;
+      transform: translateX(0%);
+      overflow: visible;
+      margin: 0;
+
+      &::before,
+      &::after {
+        content: attr(data-hover);
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+      }
+
+      &::before {
+        left: calc(200% + (var(--paddingX) * 2));
+      }
+
+      &::after {
+        left: calc(100% + var(--paddingX));
+      }
+    }
+
+    &:hover {
+      [data-hover] {
+        animation-name: rollLeft;
+        animation-duration: 2s;
+        animation-timing-function: linear;
+        animation-play-state: running;
+        animation-iteration-count: infinite;
+      }
+    }
+
+    @keyframes rollLeft {
+      0% {
+        transform: translateX(0%);
+      }
+      100% {
+        transform: translateX(calc(-100% - var(--paddingX)));
+      }
+    }
+  }
+
+  // Variants
+
+  &--primary {
+    &-yellow {
+      #{$block-name}__text {
+        color: var(--black);
+      }
+
+      #{$block-name}__bg {
+        background-color: var(--yellow);
+
+        & > span {
+          &::before {
+            background-color: var(--red);
+          }
+
+          &::after {
+            background-color: var(--lightGrey);
+          }
+        }
+      }
+    }
+
+    &-black {
+      #{$block-name}__text {
+        color: var(--yellow);
+      }
+
+      #{$block-name}__bg {
+        background-color: var(--black);
+
+        & > span {
+          &::before {
+            background-color: var(--yellow);
+          }
+
+          &::after {
+            background-color: var(--lightGrey);
+          }
+        }
+      }
+    }
+  }
+
+  &--secondary {
+    &-black {
+      border: 1px solid var(--black);
+
+      #{$block-name}__text {
+        color: var(--black);
+      }
+    }
+
+    &-white {
+      border: 1px solid var(--white);
+
+      #{$block-name}__text {
+        color: var(--white);
+      }
+    }
+    
+    &-yellow {
+      background-color: var(--black);
+      border: 1px solid var(--yellow);
+
+      #{$block-name}__text {
+        color: var(--white);
+      }
+    }
+  }
+
+  // Sizes
+
+  &--small {
+    --paddingX: 20px;
+    --paddingY: 16px;
+
+    font-size: 16px;
+    padding: var(--paddingY) var(--paddingX);
+
+    @screen 3xl {
+      font-size: 18px;
+    }
+  }
+
+  &--regular {
+    --paddingX: 24px;
+    --paddingY: 16px;
+
+    font-size: 16px;
+    padding: var(--paddingY) var(--paddingX);
+
+    @screen md {
+      --paddingX: 30px;
+      --paddingY: 24px;
+
+      font-size: 16px;
+    }
+
+    @screen 3xl {
+      --paddingX: 36px;
+      --paddingY: 30px;
+
+      font-size: 20px;
+    }
+  }
+
+  &--fullwidth {
+    display: block;
+    width: 100%;
+    text-align: center;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}

@@ -1,0 +1,23 @@
+.panning-text-cta {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  padding: 36px 0;
+
+  span {
+    display: inline-block;
+    white-space: nowrap;
+    width: var(--tw);
+    text-shadow: var(--tw) 0 currentColor, 
+    calc(var(--tw) * 2) 0 currentColor, 
+    calc(var(--tw) * 3) 0 currentColor,
+    calc(var(--tw) * 4) 0 currentColor;
+    will-change: transform;
+    animation: marquee var(--ad) linear infinite;
+  }
+  
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+}

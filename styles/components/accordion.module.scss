@@ -1,0 +1,12 @@
+@use 'styles/mixins';
+
+.accordion {
+  $block-name: '.accordion';
+  position: relative;
+
+  &__content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease;
+  }
+}

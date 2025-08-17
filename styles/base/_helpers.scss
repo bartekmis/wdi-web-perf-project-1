@@ -1,0 +1,26 @@
+.link {
+  @include transition(text-decoration-color, color);
+
+  &--basic {
+    text-decoration: underline;
+
+    &:hover {
+      color: var(--yellow);
+    }
+  }
+
+  &--secondary {
+    text-decoration: underline;
+    text-decoration-color: transparent;
+
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+  }
+}
+
+.stop-scrolling {
+  position: fixed;
+  overflow-y: scroll;
+  width: 100%;
+}
