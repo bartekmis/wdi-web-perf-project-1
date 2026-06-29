@@ -2,15 +2,12 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { getFullHead } from '@/lib/helper-utils';
 import Error from '../_error';
-import { GetStaticPaths, GetStaticProps } from 'next';
+import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
 import Content from '@/components/Content';
 import { CaseStudyInstance } from '@/types/case-study';
-import {
-  getAllCaseStudiesWithSlugs,
-  getCaseStudyBySlug,
-} from '@/queries/case-studies';
+import { getCaseStudyBySlug } from '@/queries/case-studies';
 import { ContentData } from '@/components/Content/Content';
 import HeaderCaseStudy from '@/components/Content/Static/HeaderCaseStudy';
 import { withGlobalData } from '@/lib/api-utils';
@@ -36,7 +33,7 @@ const CaseStudy = ({ page }: { page: CaseStudyInstance }) => {
   );
 };
 
-export const getStaticProps: GetStaticProps = withGlobalData(
+export const getServerSideProps: GetServerSideProps = withGlobalData(
   async (context: any) => {
     const { slug } = context.params as ParsedUrlQuery & { slug: string };
 
@@ -46,19 +43,8 @@ export const getStaticProps: GetStaticProps = withGlobalData(
       props: {
         page,
       },
-      revalidate: 60,
     };
   }
 );
-
-export const getStaticPaths: GetStaticPaths = async () => {
-  const pagesWithSlugs = await getAllCaseStudiesWithSlugs();
-
-  return {
-    paths:
-      pagesWithSlugs.map((page: any) => `/case-studies/${page.slug}/`) || [],
-    fallback: true,
-  };
-};
 
 export default CaseStudy;

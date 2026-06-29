@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { getFullHead } from '@/lib/helper-utils';
 import Error from '@/pages/_error';
-import { GetStaticPaths, GetStaticProps } from 'next';
+import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
 import ContentImage from '@/components/Components/ContentImage';
@@ -15,7 +15,6 @@ import {
 } from '@/types/knowledge';
 import {
   getAllCategories,
-  getAllCategoriesWithSlugs,
   getCategoryBySlug,
 } from '@/queries/knowledge';
 import CategoryTag from '@/components/Components/CategoryTag';
@@ -159,7 +158,7 @@ const KnowledgeCategory = ({
   );
 };
 
-export const getStaticProps: GetStaticProps = withGlobalData(
+export const getServerSideProps: GetServerSideProps = withGlobalData(
   async (context: any) => {
     const { slug } = context.params as ParsedUrlQuery & { slug: string };
     const page = await getCategoryBySlug(slug);
@@ -170,21 +169,8 @@ export const getStaticProps: GetStaticProps = withGlobalData(
         page,
         categories: knowledgeCategories,
       },
-      revalidate: 60,
     };
   }
 );
-
-export const getStaticPaths: GetStaticPaths = async () => {
-  const categoriesWithSlugs = await getAllCategoriesWithSlugs();
-
-  return {
-    paths:
-      categoriesWithSlugs.map(
-        (page: any) => `/knowledge/category/${page.slug}/`
-      ) || [],
-    fallback: true,
-  };
-};
 
 export default KnowledgeCategory;

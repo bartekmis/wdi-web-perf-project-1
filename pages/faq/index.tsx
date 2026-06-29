@@ -1,5 +1,5 @@
 import { useState, ChangeEvent } from 'react';
-import { GetStaticProps } from 'next';
+import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import Head from 'next/head';
 import { getFullHead } from '@/lib/helper-utils';
@@ -154,7 +154,7 @@ const Faq = ({
   );
 };
 
-export const getStaticProps: GetStaticProps = withGlobalData(async () => {
+export const getServerSideProps: GetServerSideProps = withGlobalData(async () => {
   const faqCategories = await getAllCategories();
   const seoFullHead = await getContentTypeFullHead('faq');
 
@@ -163,7 +163,6 @@ export const getStaticProps: GetStaticProps = withGlobalData(async () => {
       categories: faqCategories,
       seoFullHead
     },
-    revalidate: 60,
   };
 });
 

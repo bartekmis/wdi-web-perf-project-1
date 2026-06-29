@@ -1,6 +1,6 @@
 import Head from 'next/head';
 import { getFullHead } from '@/lib/helper-utils';
-import { GetStaticProps } from 'next';
+import { GetServerSideProps } from 'next';
 
 import Content from '@/components/Content';
 import { getPageBySlug } from '@/queries/pages';
@@ -23,7 +23,7 @@ const Home = ({ page }: { page: PageInstance }) => {
   );
 };
 
-export const getStaticProps: GetStaticProps = withGlobalData(async () => {
+export const getServerSideProps: GetServerSideProps = withGlobalData(async () => {
   const slug = '/';
   const page: PageInstance = await getPageBySlug(slug);
 
@@ -31,7 +31,6 @@ export const getStaticProps: GetStaticProps = withGlobalData(async () => {
     props: {
       page,
     },
-    revalidate: 60,
   };
 });
 

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { getFullHead } from '@/lib/helper-utils';
-import { GetStaticPaths, GetStaticProps } from 'next';
+import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
 import {
@@ -12,7 +12,6 @@ import {
 } from '@/types/case-study';
 import {
   getAllCategories,
-  getAllCategoriesWithSlugs,
   getCategoryBySlug,
 } from '@/queries/case-studies';
 import ContentImage from '@/components/Components/ContentImage';
@@ -176,7 +175,7 @@ const CaseStudyCategory = ({
   );
 };
 
-export const getStaticProps: GetStaticProps = withGlobalData(
+export const getServerSideProps: GetServerSideProps = withGlobalData(
   async (context: any) => {
     const { slug } = context.params as ParsedUrlQuery & { slug: string };
     const page = await getCategoryBySlug(slug);
@@ -187,21 +186,8 @@ export const getStaticProps: GetStaticProps = withGlobalData(
         page,
         categories: caseStudyCategories,
       },
-      revalidate: 60,
     };
   }
 );
-
-export const getStaticPaths: GetStaticPaths = async () => {
-  const categoriesWithSlugs = await getAllCategoriesWithSlugs();
-
-  return {
-    paths:
-      categoriesWithSlugs.map(
-        (page: any) => `/case-studies/category/${page.slug}/`
-      ) || [],
-    fallback: true,
-  };
-};
 
 export default CaseStudyCategory;

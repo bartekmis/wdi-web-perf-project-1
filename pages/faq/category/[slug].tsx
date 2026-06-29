@@ -1,5 +1,5 @@
 import { ChangeEvent, useState } from 'react';
-import { GetStaticPaths, GetStaticProps } from 'next';
+import { GetServerSideProps } from 'next';
 import Head from 'next/head';
 import { getFullHead } from '@/lib/helper-utils';
 import ErrorPage from 'next/error';
@@ -8,7 +8,6 @@ import { FiSearch } from 'react-icons/fi';
 
 import {
   getAllCategories,
-  getAllCategoriesWithSlugs,
   getCategoryBySlug,
 } from '@/queries/faq';
 import {
@@ -169,7 +168,7 @@ const FaqCategory = ({
   );
 };
 
-export const getStaticProps: GetStaticProps = withGlobalData(
+export const getServerSideProps: GetServerSideProps = withGlobalData(
   async (context: any) => {
     const { slug } = context.params as ParsedUrlQuery & { slug: string };
     const page = await getCategoryBySlug(slug);
@@ -180,21 +179,8 @@ export const getStaticProps: GetStaticProps = withGlobalData(
         page,
         categories: faqCategories,
       },
-      revalidate: 60,
     };
   }
 );
-
-export const getStaticPaths: GetStaticPaths = async () => {
-  const categoriesWithSlugs = await getAllCategoriesWithSlugs();
-
-  return {
-    paths:
-      categoriesWithSlugs.map(
-        (page: any) => `/faq/category/${page.slug}/`
-      ) || [],
-    fallback: true,
-  };
-};
 
 export default FaqCategory;

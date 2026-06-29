@@ -2,10 +2,10 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { getFullHead } from '@/lib/helper-utils';
 import Error from './_error';
-import { GetStaticPaths, GetStaticProps } from 'next';
+import { GetServerSideProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
-import { getAllPagesWithSlugs, getPageBySlug } from '@/queries/pages';
+import { getPageBySlug } from '@/queries/pages';
 import Content from '@/components/Content';
 import { PageInstance } from '@/types/page';
 import { ContentData } from '@/components/Content/Content';
@@ -34,7 +34,7 @@ const Page = ({ page }: { page: PageInstance }) => {
   );
 };
 
-export const getStaticProps: GetStaticProps = withGlobalData(
+export const getServerSideProps: GetServerSideProps = withGlobalData(
   async (context: any) => {
     const { slug } = context.params as ParsedUrlQuery & { slug: string[] };
     const slugString = slug.join('/');
@@ -44,21 +44,8 @@ export const getStaticProps: GetStaticProps = withGlobalData(
       props: {
         page,
       },
-      revalidate: 60,
     };
   }
 );
-
-export const getStaticPaths: GetStaticPaths = async () => {
-  const pagesWithSlugs = await getAllPagesWithSlugs();
-  const allPaths = pagesWithSlugs.map((page: any) =>
-    page.uri === '/' ? '/homepage/' : page.uri
-  );
-
-  return {
-    paths: allPaths || [],
-    fallback: true,
-  };
-};
 
 export default Page;

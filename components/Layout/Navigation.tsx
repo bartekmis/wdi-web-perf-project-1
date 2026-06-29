@@ -13,6 +13,25 @@ import Accordion from "../Components/Accordion";
 import { PartialsContext } from "@/contexts/partials";
 import { PartialsData } from "@/types/partials";
 
+// Przelicza "staggered" opóźnienia animacji dla pozycji menu mobilnego,
+// żeby kolejne linki wjeżdżały z lekkim przesunięciem czasowym.
+// Naiwna, w pełni synchroniczna implementacja - przeliczana od zera przy
+// każdym otwarciu menu i blokująca main thread przed pierwszym paintem.
+const computeMobileMenuAnimationOffsets = (itemCount: number) => {
+  const offsets: number[] = [];
+  const blocks = Math.max(itemCount, 8);
+
+  for (let i = 0; i < blocks; i++) {
+    let value = 0;
+    for (let j = 0; j < 3_000_000; j++) {
+      value += Math.sqrt((i + 1) * (j + 1)) * Math.sin(j);
+    }
+    offsets.push(Math.abs(value) % 360);
+  }
+
+  return offsets;
+};
+
 const Navigation = ({ menu }: { menu: HierarchicalMenu }) => {
   const router = useRouter();
   const partials = useContext(PartialsContext) as PartialsData;
@@ -166,7 +185,21 @@ const Navigation = ({ menu }: { menu: HierarchicalMenu }) => {
           type="button"
           aria-label="Open menu"
           className={`${styles["burger"]} ${isMenuOpen ? styles["open"] : ""}`}
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
+          onClick={() => {
+            const willOpen = !isMenuOpen;
+
+            // Tylko mobile + tylko przy otwieraniu: przelicz offsety animacji
+            // synchronicznie w handlerze kliknięcia (long task -> wysoki INP).
+            if (
+              willOpen &&
+              typeof window !== "undefined" &&
+              window.innerWidth <= 768
+            ) {
+              computeMobileMenuAnimationOffsets(menu.length);
+            }
+
+            setIsMenuOpen(willOpen);
+          }}
         >
           <span className={styles["burger__box"]}>
             <span className={styles["burger__inner"]}></span>

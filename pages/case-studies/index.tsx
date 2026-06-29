@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GetStaticProps } from 'next';
+import { GetServerSideProps } from 'next';
 import Link from 'next/link';
 import Head from 'next/head';
 
@@ -163,7 +163,7 @@ const CaseStudies = ({
   );
 };
 
-export const getStaticProps: GetStaticProps = withGlobalData(async () => {
+export const getServerSideProps: GetServerSideProps = withGlobalData(async () => {
   const caseStudyCategories = await getAllCategories();
   const seoFullHead = await getContentTypeFullHead('caseStudy');
 
@@ -172,7 +172,6 @@ export const getStaticProps: GetStaticProps = withGlobalData(async () => {
       categories: caseStudyCategories,
       seoFullHead,
     },
-    revalidate: 60,
   };
 });
 
