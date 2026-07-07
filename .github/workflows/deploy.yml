@@ -102,8 +102,6 @@ jobs:
         run: |
           PORT="${SSH_PORT:-22}"
           SSH_OPTS="-i ~/.ssh/deploy_key -p $PORT -o StrictHostKeyChecking=yes"
-          # scp uses -P (capital) for the port, unlike ssh's -p.
-          SCP_OPTS="-i ~/.ssh/deploy_key -P $PORT -o StrictHostKeyChecking=yes"
 
           # Build the runtime .env locally from secrets, then copy it up. Only
           # server-side vars matter at runtime (NEXT_PUBLIC_* are already inlined),
@@ -126,7 +124,10 @@ jobs:
           EOF
 
           # Land .env at the app root (one level above the synced bundle).
-          scp $SCP_OPTS runtime.env "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/.env"
+          # Piped over the ssh shell channel instead of scp: modern scp uses the
+          # SFTP subsystem, which is disabled on many hardened servers even when
+          # shell/rsync work fine (the "Connection closed" failure mode).
+          ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" "cat > '$DEPLOY_PATH/.env'" < runtime.env
           rm -f runtime.env
 
           # Reload the app. startOrReload is idempotent: it starts the app on the
