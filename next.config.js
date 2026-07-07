@@ -7,6 +7,9 @@ if (!process.env.WORDPRESS_API_URL) {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Produces a self-contained .next/standalone bundle (server.js + traced
+  // node_modules) so the CI runner can rsync a minimal artifact to the server.
+  output: 'standalone',
   experimental: {
     largePageDataBytes: 2048 * 1000,
   },

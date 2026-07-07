@@ -1,0 +1,133 @@
+name: Deploy (build on runner, ship over SSH)
+
+on:
+  push:
+    branches:
+      - zf-ai-labs
+  workflow_dispatch: {}
+
+# One production deploy at a time. A newer push waits for the running one to
+# finish rather than racing it on the server.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    env:
+      # --- Build-time app env (NEXT_PUBLIC_* get inlined into the bundle here) ---
+      WORDPRESS_API_URL: ${{ secrets.WORDPRESS_API_URL }}
+      WORDPRESS_AUTH_REFRESH_TOKEN: ${{ secrets.WORDPRESS_AUTH_REFRESH_TOKEN }}
+      WORDPRESS_PREVIEW_SECRET: ${{ secrets.WORDPRESS_PREVIEW_SECRET }}
+      NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
+      NEXT_PUBLIC_MEDIA_URL: ${{ secrets.NEXT_PUBLIC_MEDIA_URL }}
+      NEXT_PUBLIC_IMGIX_URL: ${{ secrets.NEXT_PUBLIC_IMGIX_URL }}
+      NEXT_PUBLIC_FRONTEND_URL: ${{ secrets.NEXT_PUBLIC_FRONTEND_URL }}
+      NEXT_PUBLIC_BACKEND_URL: ${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
+      NEXT_PUBLIC_GTM_ID: ${{ secrets.NEXT_PUBLIC_GTM_ID }}
+      NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+      NEXT_PUBLIC_ENV: ${{ secrets.NEXT_PUBLIC_ENV }}
+      # Enables Sentry source-map upload during the build.
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # Standalone output does not include the static assets or /public — copy
+      # them next to server.js so the shipped bundle can serve on its own.
+      - name: Assemble standalone bundle
+        run: |
+          cp -r .next/static .next/standalone/.next/static
+          if [ -d public ]; then cp -r public .next/standalone/public; fi
+
+      - name: Configure SSH
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Pin the host key from a secret if provided; otherwise trust-on-first-use.
+          if [ -n "$SSH_KNOWN_HOSTS" ]; then
+            printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            ssh-keyscan -p "${SSH_PORT:-22}" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          fi
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Ship bundle to server
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          PORT="${SSH_PORT:-22}"
+          SSH_OPTS="-i ~/.ssh/deploy_key -p $PORT -o StrictHostKeyChecking=yes"
+          # Ensure target dir exists, then sync the assembled bundle.
+          # --delete removes files no longer in the build; .env lives outside
+          # this tree (written in the next step) so it is never touched.
+          ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" "mkdir -p '$DEPLOY_PATH/current'"
+          rsync -az --delete \
+            -e "ssh $SSH_OPTS" \
+            .next/standalone/ \
+            "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/current/"
+
+      - name: Write runtime env + reload PM2
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          PM2_APP_NAME: ${{ secrets.PM2_APP_NAME }}
+        run: |
+          PORT="${SSH_PORT:-22}"
+          SSH_OPTS="-i ~/.ssh/deploy_key -p $PORT -o StrictHostKeyChecking=yes"
+
+          # Build the runtime .env locally from secrets, then copy it up. Only
+          # server-side vars matter at runtime (NEXT_PUBLIC_* are already inlined),
+          # but writing the full set keeps the file self-documenting.
+          cat > runtime.env <<'EOF'
+          NODE_ENV=production
+          PORT=3000
+          HOSTNAME=127.0.0.1
+          WORDPRESS_API_URL=${{ secrets.WORDPRESS_API_URL }}
+          WORDPRESS_AUTH_REFRESH_TOKEN=${{ secrets.WORDPRESS_AUTH_REFRESH_TOKEN }}
+          WORDPRESS_PREVIEW_SECRET=${{ secrets.WORDPRESS_PREVIEW_SECRET }}
+          NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}
+          NEXT_PUBLIC_MEDIA_URL=${{ secrets.NEXT_PUBLIC_MEDIA_URL }}
+          NEXT_PUBLIC_IMGIX_URL=${{ secrets.NEXT_PUBLIC_IMGIX_URL }}
+          NEXT_PUBLIC_FRONTEND_URL=${{ secrets.NEXT_PUBLIC_FRONTEND_URL }}
+          NEXT_PUBLIC_BACKEND_URL=${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
+          NEXT_PUBLIC_GTM_ID=${{ secrets.NEXT_PUBLIC_GTM_ID }}
+          NEXT_PUBLIC_SENTRY_DSN=${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+          NEXT_PUBLIC_ENV=${{ secrets.NEXT_PUBLIC_ENV }}
+          EOF
+
+          # Land .env at the app root (one level above the synced bundle).
+          scp $SSH_OPTS runtime.env "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/.env"
+          rm -f runtime.env
+
+          # Reload the app. startOrReload is idempotent: it starts the app on the
+          # first deploy and does a zero-downtime reload on subsequent ones.
+          ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" \
+            "cd '$DEPLOY_PATH' && pm2 startOrReload ecosystem.config.js --update-env && pm2 save"
