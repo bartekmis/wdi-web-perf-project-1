@@ -86,6 +86,12 @@ export default function Document() {
     <Html lang="en">
       <Head>
         <meta name="robots" content="noindex, nofollow"></meta>
+        {/* DebugBear RUM - load early so it captures errors from the start */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var dbpr=100;if(Math.random()*100>100-dbpr){var d="dbbRum",w=window,o=document,a=addEventListener,scr=o.createElement("script");scr.async=!0;w[d]=w[d]||[];w[d].push(["presampling",dbpr]);["error","unhandledrejection"].forEach(function(t){a(t,function(e){w[d].push([t,e])});});scr.src="https://cdn.debugbear.com/OsowRdI4ZOnc.js";o.head.appendChild(scr);}})()`,
+          }}
+        />
         {gtmId && (
           <>
             <script
