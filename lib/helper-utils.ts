@@ -16,11 +16,10 @@ export const formatPhone = (phone: string) => {
 };
 
 export const getFullHead = (fullHead: string) => {
-  let metaRobots = '<meta name="robots" content="noindex, nofollow">';
-
-  if (process.env.NEXT_PUBLIC_ENV === 'production') {
-    metaRobots = '<meta name="robots" content="index, follow">';
-  }
+  // Indexing is controlled solely by the global `noindex, nofollow` tag in
+  // _document.tsx. Strip any robots tag Yoast injected into the SEO head so we
+  // never emit a second, conflicting directive on top of it.
+  fullHead = fullHead.replace(/<meta[^>]*name=["']robots["'][^>]*>/gi, '');
 
   // replace NEXT_PUBLIC_MEDIA_URL with NEXT_PUBLIC_IMGIX_URL
   if (process.env.NEXT_PUBLIC_MEDIA_URL && process.env.NEXT_PUBLIC_IMGIX_URL) {
@@ -41,5 +40,5 @@ export const getFullHead = (fullHead: string) => {
   // replace all /" with "
   fullHead = fullHead.replace(/\/"/g, '"');
 
-  return parser(`${metaRobots} ${fullHead}`);
+  return parser(fullHead);
 }
