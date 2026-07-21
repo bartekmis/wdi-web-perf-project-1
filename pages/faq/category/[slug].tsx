@@ -8,6 +8,7 @@ import { FiSearch } from 'react-icons/fi';
 
 import {
   getAllCategories,
+  getAllCategoriesWithSlugs,
   getCategoryBySlug,
 } from '@/queries/faq';
 import {
@@ -168,9 +169,16 @@ const FaqCategory = ({
   );
 };
 
+// Pre-render wszystkich kategorii w buildzie; nowe generują się na żądanie.
 export const getStaticPaths: GetStaticPaths = async () => {
+  const categories = await getAllCategoriesWithSlugs();
+
+  const paths = categories
+    .filter((category: any) => category?.slug)
+    .map((category: any) => ({ params: { slug: category.slug } }));
+
   return {
-    paths: [],
+    paths,
     fallback: 'blocking',
   };
 };

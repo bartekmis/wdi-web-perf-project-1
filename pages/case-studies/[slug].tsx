@@ -7,7 +7,7 @@ import { ParsedUrlQuery } from 'querystring';
 
 import Content from '@/components/Content';
 import { CaseStudyInstance } from '@/types/case-study';
-import { getCaseStudyBySlug } from '@/queries/case-studies';
+import { getAllCaseStudiesWithSlugs, getCaseStudyBySlug } from '@/queries/case-studies';
 import { ContentData } from '@/components/Content/Content';
 import HeaderCaseStudy from '@/components/Content/Static/HeaderCaseStudy';
 import { withGlobalData, REVALIDATE_SECONDS } from '@/lib/api-utils';
@@ -33,9 +33,16 @@ const CaseStudy = ({ page }: { page: CaseStudyInstance }) => {
   );
 };
 
+// Pre-render wszystkich case studies w buildzie; nowe generują się na żądanie.
 export const getStaticPaths: GetStaticPaths = async () => {
+  const caseStudies = await getAllCaseStudiesWithSlugs();
+
+  const paths = caseStudies
+    .filter((cs: any) => cs?.slug)
+    .map((cs: any) => ({ params: { slug: cs.slug } }));
+
   return {
-    paths: [],
+    paths,
     fallback: 'blocking',
   };
 };

@@ -5,7 +5,7 @@ import Error from './_error';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
-import { getPageBySlug } from '@/queries/pages';
+import { getAllPagesWithSlugs, getPageBySlug } from '@/queries/pages';
 import Content from '@/components/Content';
 import { PageInstance } from '@/types/page';
 import { ContentData } from '@/components/Content/Content';
@@ -34,12 +34,26 @@ const Page = ({ page }: { page: PageInstance }) => {
   );
 };
 
-// Nie pre-renderujemy żadnych ścieżek w buildzie - strony powstają na żądanie
-// przy pierwszym wejściu (fallback: 'blocking'), a potem są serwowane ze
-// statycznego cache i odświeżane w tle co REVALIDATE_SECONDS.
+// Ścieżki obsługiwane przez dedykowane routy (mają własne pliki w pages/) - nie
+// generujemy ich tutaj, żeby nie kolidowały z catch-allem.
+const RESERVED_TOP_LEVEL = new Set(['faq', 'case-studies', 'knowledge', 'preview']);
+
+// Pre-renderujemy w buildzie wszystkie istniejące strony WP, żeby pierwszy
+// odwiedzający też miał szybko. Nowe/nieznane strony nadal generują się na
+// żądanie przy pierwszym wejściu (fallback: 'blocking').
 export const getStaticPaths: GetStaticPaths = async () => {
+  const pages = await getAllPagesWithSlugs();
+
+  const paths = pages
+    .map((page: any) => String(page?.uri || '').split('/').filter(Boolean))
+    .filter(
+      (segments: string[]) =>
+        segments.length > 0 && !RESERVED_TOP_LEVEL.has(segments[0])
+    )
+    .map((segments: string[]) => ({ params: { slug: segments } }));
+
   return {
-    paths: [],
+    paths,
     fallback: 'blocking',
   };
 };

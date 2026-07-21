@@ -14,6 +14,37 @@ const API_URL = process.env.WORDPRESS_API_URL || "";
 // co REVALIDATE_SECONDS bez blokowania requestu użytkownika.
 export const REVALIDATE_SECONDS = 60;
 
+// Next ustawia tę fazę tylko podczas `next build` (jeden proces na cały build).
+const IS_BUILD_PHASE = process.env.NEXT_PHASE === "phase-production-build";
+
+// Memoizacja danych globalnych WYŁĄCZNIE na czas builda. Przy pre-renderingu
+// (getStaticPaths) każda z setek stron woła withGlobalData, a dane globalne
+// (menu, media, formularze...) są dla wszystkich identyczne - bez tego każda
+// strona pobierałaby je od nowa, w tym pełną sekwencyjną paginację getMediaItems.
+// W runtime (rewalidacja ISR / fallback) cache jest wyłączony, żeby dane były
+// świeże - trzymamy Promise, więc równoległe wywołania też się deduplikują.
+const buildDataCache = new Map<string, Promise<unknown>>();
+
+const getGlobal = <T>(key: string, fetcher: () => Promise<T>): Promise<T> => {
+  if (!IS_BUILD_PHASE) {
+    return fetcher();
+  }
+
+  const existing = buildDataCache.get(key) as Promise<T> | undefined;
+  if (existing) {
+    return existing;
+  }
+
+  const value = fetcher().catch((err) => {
+    // Nie cache'ujemy błędu - kolejna strona ma szansę spróbować ponownie.
+    buildDataCache.delete(key);
+    throw err;
+  });
+
+  buildDataCache.set(key, value);
+  return value;
+};
+
 type HeadersType = {
   "Content-Type": string;
   Authorization?: string;
@@ -103,13 +134,13 @@ export const withGlobalData =
       partials,
     ] = await Promise.all([
       getStaticProps(...props),
-      getMenus(),
-      getMediaItems(),
-      getGravityForms(),
-      getAllCaseStudies(),
-      getAllKnowledgeArticles(),
-      getAllFaqs(),
-      getAllPartials(),
+      getGlobal("menus", getMenus),
+      getGlobal("mediaItems", getMediaItems),
+      getGlobal("forms", getGravityForms),
+      getGlobal("caseStudies", getAllCaseStudies),
+      getGlobal("knowledgeArticles", getAllKnowledgeArticles),
+      getGlobal("faqs", getAllFaqs),
+      getGlobal("partials", getAllPartials),
     ]);
 
     const staticProps = result?.props || {};

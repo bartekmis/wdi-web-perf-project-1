@@ -12,6 +12,7 @@ import {
 } from '@/types/case-study';
 import {
   getAllCategories,
+  getAllCategoriesWithSlugs,
   getCategoryBySlug,
 } from '@/queries/case-studies';
 import ContentImage from '@/components/Components/ContentImage';
@@ -175,9 +176,16 @@ const CaseStudyCategory = ({
   );
 };
 
+// Pre-render wszystkich kategorii w buildzie; nowe generują się na żądanie.
 export const getStaticPaths: GetStaticPaths = async () => {
+  const categories = await getAllCategoriesWithSlugs();
+
+  const paths = categories
+    .filter((category: any) => category?.slug)
+    .map((category: any) => ({ params: { slug: category.slug } }));
+
   return {
-    paths: [],
+    paths,
     fallback: 'blocking',
   };
 };
