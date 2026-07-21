@@ -47,22 +47,19 @@ export const getMediaItems = async () => {
       }
     );
   };
-  const initialData = await getPaginatedData({ first: 100 });
-  const allMediaItems = initialData.mediaItems.edges;
+  // WPGraphQL zwraca kursor kolejnej strony dopiero po pobraniu bieżącej, więc
+  // stronicowanie jest z natury sekwencyjne (nie da się zrównoleglić bez kursorów
+  // z góry). Dlatego kluczowe jest, że to zapytanie odpala się teraz tylko przy
+  // buildzie/rewalidacji ISR, a nie przy każdym requeście (patrz `withGlobalData`).
+  const allMediaItems: any[] = [];
+  let after: string | undefined = undefined;
+  let hasNextPage = true;
 
-  let hasNextPage = initialData.mediaItems.pageInfo.hasNextPage;
-  let endCursor = initialData.mediaItems.pageInfo.endCursor;
-
-  if (hasNextPage && endCursor) {
-    while (hasNextPage) {
-      const additionalData = await getPaginatedData({
-        first: 100,
-        after: endCursor,
-      });
-      allMediaItems.push(...additionalData.mediaItems.edges);
-      hasNextPage = additionalData.mediaItems.pageInfo.hasNextPage;
-      endCursor = additionalData.mediaItems.pageInfo.endCursor;
-    }
+  while (hasNextPage) {
+    const { mediaItems } = await getPaginatedData({ first: 100, after });
+    allMediaItems.push(...mediaItems.edges);
+    hasNextPage = mediaItems.pageInfo.hasNextPage;
+    after = mediaItems.pageInfo.endCursor;
   }
 
   return allMediaItems.map((item: any) => item.node);

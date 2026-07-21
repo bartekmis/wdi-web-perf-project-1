@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GetServerSideProps } from 'next';
+import { GetStaticProps } from 'next';
 import Link from 'next/link';
 import Head from 'next/head';
 import { getFullHead } from '@/lib/helper-utils';
@@ -12,7 +12,7 @@ import CategoryTag from '@/components/Components/CategoryTag';
 import KnowledgeCard from '@/components/Components/KnowledgeCard';
 import Decoration from '@/components/Components/Decoration';
 import DecorationLine from '@/components/Components/DecorationLine';
-import { withGlobalData } from '@/lib/api-utils';
+import { withGlobalData, REVALIDATE_SECONDS } from '@/lib/api-utils';
 import ListingCategoryMenu from '@/components/Components/ListingCategoryMenu';
 import PerformanceMonitor from '@/components/Components/PerformanceMonitor';
 
@@ -145,15 +145,18 @@ const KnowledgeArticles = ({
   );
 };
 
-export const getServerSideProps: GetServerSideProps = withGlobalData(async () => {
-  const knowledgeCategories = await getAllCategories();
-  const seoFullHead = await getContentTypeFullHead('knowledgeArticle');
+export const getStaticProps: GetStaticProps = withGlobalData(async () => {
+  const [knowledgeCategories, seoFullHead] = await Promise.all([
+    getAllCategories(),
+    getContentTypeFullHead('knowledgeArticle'),
+  ]);
 
   return {
     props: {
       categories: knowledgeCategories,
       seoFullHead
     },
+    revalidate: REVALIDATE_SECONDS,
   };
 });
 

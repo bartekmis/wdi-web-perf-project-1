@@ -1,5 +1,5 @@
 import { ChangeEvent, useState } from 'react';
-import { GetServerSideProps } from 'next';
+import { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
 import { getFullHead } from '@/lib/helper-utils';
 import ErrorPage from 'next/error';
@@ -18,7 +18,7 @@ import FaqGroup from '@/components/Components/FaqGroup';
 import Button from '@/components/Components/Button';
 import { ParsedUrlQuery } from 'querystring';
 import { AccordionItem } from '@/components/Components/FaqGroup';
-import { withGlobalData } from '@/lib/api-utils';
+import { withGlobalData, REVALIDATE_SECONDS } from '@/lib/api-utils';
 import ListingCategoryMenu from '@/components/Components/ListingCategoryMenu';
 import Error from '@/pages/_error';
 
@@ -168,17 +168,27 @@ const FaqCategory = ({
   );
 };
 
-export const getServerSideProps: GetServerSideProps = withGlobalData(
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: [],
+    fallback: 'blocking',
+  };
+};
+
+export const getStaticProps: GetStaticProps = withGlobalData(
   async (context: any) => {
     const { slug } = context.params as ParsedUrlQuery & { slug: string };
-    const page = await getCategoryBySlug(slug);
-    const faqCategories = await getAllCategories();
+    const [page, faqCategories] = await Promise.all([
+      getCategoryBySlug(slug),
+      getAllCategories(),
+    ]);
 
     return {
       props: {
         page,
         categories: faqCategories,
       },
+      revalidate: REVALIDATE_SECONDS,
     };
   }
 );

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { GetServerSideProps } from 'next';
+import { GetStaticProps } from 'next';
 import Link from 'next/link';
 import Head from 'next/head';
 
@@ -12,7 +12,7 @@ import Button from '@/components/Components/Button';
 import Decoration from '@/components/Components/Decoration';
 import CaseStudyCard from '@/components/Components/CaseStudyCard';
 import DecorationLine from '@/components/Components/DecorationLine';
-import { withGlobalData } from '@/lib/api-utils';
+import { withGlobalData, REVALIDATE_SECONDS } from '@/lib/api-utils';
 import ListingCategoryMenu from '@/components/Components/ListingCategoryMenu';
 import PerformanceMonitor from '@/components/Components/PerformanceMonitor';
 
@@ -163,15 +163,18 @@ const CaseStudies = ({
   );
 };
 
-export const getServerSideProps: GetServerSideProps = withGlobalData(async () => {
-  const caseStudyCategories = await getAllCategories();
-  const seoFullHead = await getContentTypeFullHead('caseStudy');
+export const getStaticProps: GetStaticProps = withGlobalData(async () => {
+  const [caseStudyCategories, seoFullHead] = await Promise.all([
+    getAllCategories(),
+    getContentTypeFullHead('caseStudy'),
+  ]);
 
   return {
     props: {
       categories: caseStudyCategories,
       seoFullHead,
     },
+    revalidate: REVALIDATE_SECONDS,
   };
 });
 

@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { getFullHead } from '@/lib/helper-utils';
 import Error from '../_error';
-import { GetServerSideProps } from 'next';
+import { GetStaticPaths, GetStaticProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
 import Content from '@/components/Content';
@@ -10,7 +10,7 @@ import { CaseStudyInstance } from '@/types/case-study';
 import { getCaseStudyBySlug } from '@/queries/case-studies';
 import { ContentData } from '@/components/Content/Content';
 import HeaderCaseStudy from '@/components/Content/Static/HeaderCaseStudy';
-import { withGlobalData } from '@/lib/api-utils';
+import { withGlobalData, REVALIDATE_SECONDS } from '@/lib/api-utils';
 
 const CaseStudy = ({ page }: { page: CaseStudyInstance }) => {
   const router = useRouter();
@@ -33,7 +33,14 @@ const CaseStudy = ({ page }: { page: CaseStudyInstance }) => {
   );
 };
 
-export const getServerSideProps: GetServerSideProps = withGlobalData(
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: [],
+    fallback: 'blocking',
+  };
+};
+
+export const getStaticProps: GetStaticProps = withGlobalData(
   async (context: any) => {
     const { slug } = context.params as ParsedUrlQuery & { slug: string };
 
@@ -43,6 +50,7 @@ export const getServerSideProps: GetServerSideProps = withGlobalData(
       props: {
         page,
       },
+      revalidate: REVALIDATE_SECONDS,
     };
   }
 );

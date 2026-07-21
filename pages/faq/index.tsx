@@ -1,5 +1,5 @@
 import { useState, ChangeEvent } from 'react';
-import { GetServerSideProps } from 'next';
+import { GetStaticProps } from 'next';
 import Link from 'next/link';
 import Head from 'next/head';
 import { getFullHead } from '@/lib/helper-utils';
@@ -10,7 +10,7 @@ import { getContentTypeFullHead } from '@/queries/seo';
 import { FaqCategory, FaqItem } from '@/types/faq';
 import FaqGroup, { AccordionItem } from '@/components/Components/FaqGroup';
 import Button from '@/components/Components/Button';
-import { withGlobalData } from '@/lib/api-utils';
+import { withGlobalData, REVALIDATE_SECONDS } from '@/lib/api-utils';
 import ListingCategoryMenu from '@/components/Components/ListingCategoryMenu';
 
 const Faq = ({
@@ -154,15 +154,18 @@ const Faq = ({
   );
 };
 
-export const getServerSideProps: GetServerSideProps = withGlobalData(async () => {
-  const faqCategories = await getAllCategories();
-  const seoFullHead = await getContentTypeFullHead('faq');
+export const getStaticProps: GetStaticProps = withGlobalData(async () => {
+  const [faqCategories, seoFullHead] = await Promise.all([
+    getAllCategories(),
+    getContentTypeFullHead('faq'),
+  ]);
 
   return {
     props: {
       categories: faqCategories,
       seoFullHead
     },
+    revalidate: REVALIDATE_SECONDS,
   };
 });
 

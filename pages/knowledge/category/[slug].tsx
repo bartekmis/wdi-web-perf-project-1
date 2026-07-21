@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { getFullHead } from '@/lib/helper-utils';
 import Error from '@/pages/_error';
-import { GetServerSideProps } from 'next';
+import { GetStaticPaths, GetStaticProps } from 'next';
 import { ParsedUrlQuery } from 'querystring';
 
 import ContentImage from '@/components/Components/ContentImage';
@@ -21,7 +21,7 @@ import CategoryTag from '@/components/Components/CategoryTag';
 import KnowledgeCard from '@/components/Components/KnowledgeCard';
 import Decoration from '@/components/Components/Decoration';
 import DecorationLine from '@/components/Components/DecorationLine';
-import { withGlobalData } from '@/lib/api-utils';
+import { withGlobalData, REVALIDATE_SECONDS } from '@/lib/api-utils';
 import ListingCategoryMenu from '@/components/Components/ListingCategoryMenu';
 
 const KnowledgeCategory = ({
@@ -158,17 +158,27 @@ const KnowledgeCategory = ({
   );
 };
 
-export const getServerSideProps: GetServerSideProps = withGlobalData(
+export const getStaticPaths: GetStaticPaths = async () => {
+  return {
+    paths: [],
+    fallback: 'blocking',
+  };
+};
+
+export const getStaticProps: GetStaticProps = withGlobalData(
   async (context: any) => {
     const { slug } = context.params as ParsedUrlQuery & { slug: string };
-    const page = await getCategoryBySlug(slug);
-    const knowledgeCategories = await getAllCategories();
+    const [page, knowledgeCategories] = await Promise.all([
+      getCategoryBySlug(slug),
+      getAllCategories(),
+    ]);
 
     return {
       props: {
         page,
         categories: knowledgeCategories,
       },
+      revalidate: REVALIDATE_SECONDS,
     };
   }
 );
