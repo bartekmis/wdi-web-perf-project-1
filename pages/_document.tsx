@@ -85,6 +85,12 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
+        {/* CookieYes consent management - load first */}
+        <script
+          id="cookieyes"
+          type="text/javascript"
+          src="https://cdn-cookieyes.com/client_data/92a68bd2b7ccd68375efe4a3592b2d33/script.js"
+        ></script>
         <meta name="robots" content="noindex, nofollow"></meta>
         {/* DebugBear RUM - load early so it captures errors from the start */}
         <script
