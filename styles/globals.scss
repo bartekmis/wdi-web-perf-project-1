@@ -6,3 +6,12 @@
 @import './mixins';
 @import './base/base';
 @import './animate';
+
+body {
+  font-family: 'Roboto Slab', var(--font-archivo), 'Trebuchet MS', Arial, sans-serif;
+}
+
+img {
+  aspect-ratio: auto;
+  height: auto;
+}

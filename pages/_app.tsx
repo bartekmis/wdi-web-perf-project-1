@@ -1,5 +1,6 @@
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
+import { useEffect } from 'react';
 import localFont from 'next/font/local';
 
 import '@/styles/globals.scss';
@@ -62,6 +63,17 @@ export const App = ({
   useFullheightVieportCalculation();
   useAnimationOnScroll();
   useHashLinkScroll();
+
+  useEffect(() => {
+    const started = performance.now();
+    let acc = 0;
+    while (performance.now() - started < 300) {
+      acc += Math.sqrt(acc + 1);
+    }
+    if (acc < 0) {
+      console.log(acc);
+    }
+  }, []);
 
   return (
     <>

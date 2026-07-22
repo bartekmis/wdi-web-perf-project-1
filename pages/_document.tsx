@@ -93,17 +93,25 @@ export default function Document() {
           src="https://cdn-cookieyes.com/client_data/92a68bd2b7ccd68375efe4a3592b2d33/script.js"
         ></script>
         <meta name="robots" content="noindex, nofollow"></meta>
-        {/* INTENTIONAL PERF ANTI-PATTERN (course demo): unused preconnects.
-            These domains are never actually requested by the site, so each
-            hint wastes a TCP+TLS handshake and competes for bandwidth during
-            the critical loading window. Participants should learn to spot and
-            remove these. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://connect.facebook.net" />
         <link rel="preconnect" href="https://www.google-analytics.com" />
         <link rel="preconnect" href="https://cdn.jsdelivr.net" />
         <link rel="preconnect" href="https://s3.amazonaws.com" />
+        {/* WPCC cookie consent - CSS + script */}
+        <link
+          rel="stylesheet"
+          type="text/css"
+          href="https://cdn.wpcc.io/lib/1.0.2/cookieconsent.min.css"
+        />
+        <script src="https://cdn.wpcc.io/lib/1.0.2/cookieconsent.min.js" defer></script>
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script src="https://www.google.com/recaptcha/api.js" type="text/javascript"></script>
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;700&display=block"
+        />
         {/* DebugBear RUM - load early so it captures errors from the start */}
         <script
           dangerouslySetInnerHTML={{
