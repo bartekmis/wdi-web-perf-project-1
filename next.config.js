@@ -17,7 +17,12 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840, 5000],
-    imageSizes: [20, 33, 40, 50, 60, 80, 90, 100],
+    // 120 and 240 added 2026-07-28. For a fixed-size <Image>, Next builds the
+    // srcset from [width, width*2] resolved against imageSizes+deviceSizes.
+    // The header logo is width={120}; with the old list topping out at 100,
+    // both 120 and 240 fell through to deviceSizes[0] and the page requested
+    // _next/image?w=640 for a 120x60 slot.
+    imageSizes: [20, 33, 40, 50, 60, 80, 90, 100, 120, 240],
     domains: ['k2space-backend.bigpic.dev', 'k2space.local', 'k2space-staging.imgix.net', 'k2space.imgix.net', 'cms.k2space.co.uk'],
   },
   env: {
