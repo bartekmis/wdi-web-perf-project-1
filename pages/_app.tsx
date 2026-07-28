@@ -20,6 +20,17 @@ import useHashLinkScroll from '@/hooks/hash-links-scroll';
 import Analytics from '@/components/Components/Analytics';
 import CurtainsContextProvider from '@/contexts/curtains';
 
+// REMOVED 2026-07-28: the three italic faces (Archivo-RegularItalic,
+// -MediumItalic, -BoldItalic). DO NOT RE-ADD unless something actually renders
+// italic text - next/font preloads EVERY declared face, so each unused entry
+// becomes a <link rel=preload as=font> at High priority in <head>.
+// Evidence they were dead weight: WebPageTest's font table reported
+// status "unloaded" for all three italic faces in all 3 runs, and the repo
+// contains no `font-style: italic` and no <em>/<i> in the rendered homepage
+// (the only two hits are Tailwind's `not-italic`).
+// Cost removed: 57,632 B of woff2 (19,756 + 18,488 + 19,388) fetched at
+// ~882-894ms, competing with the critical CSS for the same connections.
+// Cleanup, not a measured win - not isolated in the A/B.
 const fontArchivo = localFont({
   src: [
     {
@@ -28,28 +39,13 @@ const fontArchivo = localFont({
       weight: '400',
     },
     {
-      path: '../assets/fonts/Archivo-RegularItalic.woff2',
-      style: 'italic',
-      weight: '400',
-    },
-    {
       path: '../assets/fonts/Archivo-Medium.woff2',
       style: 'normal',
       weight: '500',
     },
     {
-      path: '../assets/fonts/Archivo-MediumItalic.woff2',
-      style: 'italic',
-      weight: '500',
-    },
-    {
       path: '../assets/fonts/Archivo-Bold.woff2',
       style: 'normal',
-      weight: '700',
-    },
-    {
-      path: '../assets/fonts/Archivo-BoldItalic.woff2',
-      style: 'italic',
       weight: '700',
     },
   ],
