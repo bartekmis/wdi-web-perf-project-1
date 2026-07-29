@@ -108,26 +108,20 @@ export default function Document() {
             budget, at ~870-905ms, exactly while the fonts and critical CSS are
             in flight. Cleanup, not a measured win: contention effects are not
             resolvable in a 5-run A/B. */}
-        {/* WPCC cookie consent - CSS + script.
-            RE-ADDED 2026-07-29 ON PURPOSE as a course demo case. This is the
-            known-bad state, not a regression to fix silently:
-            the wpcc.io zone is dead (no NS records, DNS returns SERVFAIL), so the
-            stylesheet neither loads nor fails for seconds. A classic <script> may
-            not execute until every stylesheet inserted before it has loaded OR
-            failed, so the parser can be held in <head> and nothing paints.
-            Measured when this block was removed (mobile 412x765x2.6, Fast 4G,
-            CPU 4x, n=5, medians): FCP 592ms -> 460ms (-132ms, spread +/-64ms)
-            on a local resolver. The real cost is set by the RESOLVER:
+        {/* REMOVED 2026-07-28: cdn.wpcc.io stylesheet + script. DO NOT RE-ADD.
+            The wpcc.io zone is dead (no NS records, DNS returns SERVFAIL), so the
+            stylesheet neither loaded nor failed for seconds. Because a classic
+            <script> may not execute until every stylesheet inserted before it has
+            loaded OR failed, the sync recaptcha tag below it could not run, the
+            parser could not leave <head>, and nothing painted.
+            Measured (mobile 412x765x2.6, Fast 4G, CPU 4x, n=5, medians):
+              FCP 592ms -> 460ms (-132ms, run spread +/-64ms)  [local resolver]
+            The local number understates it: cost is set by the RESOLVER, not by us.
               local resolver  wpcc failed  543ms -> FCP  592ms
               WPT agent       wpcc failed ~8450ms -> FCP 8610ms
-            A controlled variant holding the same tag for a known 6.2s moved the
-            blocker +5904ms and FCP +5892ms - a 1:1 transfer (ratio 0.998). */}
-        <link
-          rel="stylesheet"
-          type="text/css"
-          href="https://cdn.wpcc.io/lib/1.0.2/cookieconsent.min.css"
-        />
-        <script src="https://cdn.wpcc.io/lib/1.0.2/cookieconsent.min.js" defer></script>
+            Controlled variant holding the same tag for a known 6.2s moved the
+            blocker +5904ms and FCP +5892ms - a 1:1 transfer (ratio 0.998).
+            Every first-time visitor pays a different, unbounded price. */}
         {/* REMOVED 2026-07-28: sync <script src="google.com/recaptcha/api.js">.
             CORRECTNESS FIX, not a performance fix - the A/B was INCONCLUSIVE
             (FCP +12ms against a +/-40ms bar; adding `defer` bought nothing,
