@@ -7,11 +7,19 @@
 @import './base/base';
 @import './animate';
 
-body {
-  font-family: 'Roboto Slab', var(--font-archivo), 'Trebuchet MS', Arial, sans-serif;
-}
-
-img {
-  aspect-ratio: auto;
-  height: auto;
-}
+// REMOVED 2026-08-12 (both rules added by 3f9eae0 as a course demo):
+//
+// 1. body { font-family: 'Roboto Slab', var(--font-archivo), ... }
+//    Roboto Slab is not part of this design - it appears nowhere else in the
+//    repo (no tailwind token, no component, no stylesheet). It only existed to
+//    justify the render-blocking fonts.googleapis.com stylesheet in _document,
+//    which was served with `display=block` (= FOIT: text stays invisible until
+//    the woff2 arrives). Dropping the rule lets Tailwind's `sans` token
+//    (var(--font-archivo)) apply, which is the real design font and is already
+//    self-hosted and preloaded by next/font.
+//
+// 2. img { aspect-ratio: auto; height: auto; }
+//    `aspect-ratio: auto` overrode the intrinsic ratio next/image sets from
+//    width/height, so images had no reserved box until they decoded - a
+//    layout-shift generator. next/image already emits its own sizing styles.
+//    DO NOT RE-ADD either rule.

@@ -99,8 +99,10 @@ const ContentImage = forwardRef(function ContentImage(
           alt={item.altText}
           width={item.mediaDetails.width}
           height={item.mediaDetails.height}
-          priority={false}
-          loading="lazy"
+          // Honour the caller's `priority`. next/image derives both
+          // loading="eager" and fetchpriority="high" from it, so do NOT also
+          // pass `loading` here - setting both throws at runtime.
+          priority={!!priority}
           id={elementId || ''}
           data-sampler={dataSampler || ''}
           sizes={sizes || ''}
@@ -116,8 +118,7 @@ const ContentImage = forwardRef(function ContentImage(
           alt={item.altText}
           width={item.mediaDetails.width}
           height={item.mediaDetails.height}
-          priority={false}
-          loading="lazy"
+          priority={!!priority}
           id={elementId || ''}
           data-sampler={elementId || ''}
           sizes={sizes || ''}
