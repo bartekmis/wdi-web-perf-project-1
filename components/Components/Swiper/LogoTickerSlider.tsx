@@ -48,11 +48,18 @@ const LogoTickerSlider = ({
               className='!h-auto !flex justify-center items-center'
             >
               <Link href={`/case-studies/${caseStudy.slug}`}>
+                {/* `sizes` matters here even though these are small: without
+                    it next/image builds the srcset from the source width, and
+                    a WP logo a few thousand px wide resolves to w=640 for a
+                    slide that is ~105px on mobile and never exceeds 144px
+                    tall. Ten of these were saturating the same imgix
+                    connection the LCP hero uses. */}
                 <ContentImage
                   className='max-h-[144px] object-contain group-hover:[&:not(:hover)]:opacity-50 transition duration-300'
                   id={caseStudy.lead.logo.id}
                   width={+caseStudy.lead.logo.width}
                   height={+caseStudy.lead.logo.height}
+                  sizes='(max-width: 767px) 120px, 200px'
                 />
               </Link>
             </SwiperSlide>
@@ -79,6 +86,7 @@ const LogoTickerSlider = ({
                   id={logo.image}
                   width={logo.image_width}
                   height={logo.image_height}
+                  sizes='(max-width: 767px) 120px, 200px'
                 />
               </ConditionalWrapper>
             </SwiperSlide>

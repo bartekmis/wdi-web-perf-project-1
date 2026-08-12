@@ -22,7 +22,13 @@ const nextConfig = {
     // The header logo is width={120}; with the old list topping out at 100,
     // both 120 and 240 fell through to deviceSizes[0] and the page requested
     // _next/image?w=640 for a 120x60 slot.
-    imageSizes: [20, 33, 40, 50, 60, 80, 90, 100, 120, 240],
+    // 320 and 384 added 2026-08-12. The list jumped straight from 240 to
+    // deviceSizes[0]=640, so anything needing between those two resolved to
+    // 640. On a 412px viewport at DPR 2.625 that hit every small image: the
+    // case-study logos in the ticker render ~105px wide (needing ~276px) and
+    // were each fetched at w=640. Ten of them were downloading on the same
+    // imgix HTTP/2 connection as the LCP hero, competing for its bandwidth.
+    imageSizes: [20, 33, 40, 50, 60, 80, 90, 100, 120, 240, 320, 384],
     domains: ['k2space-backend.bigpic.dev', 'k2space.local', 'k2space-staging.imgix.net', 'k2space.imgix.net', 'cms.k2space.co.uk'],
   },
   env: {
