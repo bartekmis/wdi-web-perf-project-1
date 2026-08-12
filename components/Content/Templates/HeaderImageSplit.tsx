@@ -1,8 +1,7 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { gsap } from 'gsap';
-import ScrollTrigger from 'gsap/dist/ScrollTrigger';
+import { loadGsap } from '@/lib/gsap-lazy';
 
 import Button from '@/components/Components/Button';
 import styles from '@/styles/headers/header-image-split.module.scss';
@@ -18,7 +17,6 @@ import Device from '@/components/Components/Device';
 
 const HeaderImageSplit = ({ data }: any) => {
   const pathname = usePathname();
-  gsap.registerPlugin(ScrollTrigger);
 
   const variants: any = {
     0: '',
@@ -45,25 +43,13 @@ const HeaderImageSplit = ({ data }: any) => {
       return;
     }
 
-    // circle scale in
-    gsap.fromTo(
-      circleRef.current,
-      { scale: 0 },
-      {
-        scale: 1,
-        duration: 1,
-      }
-    );
+    loadGsap().then(({ gsap }) => {
+      // circle scale in
+      gsap.fromTo(circleRef.current, { scale: 0 }, { scale: 1, duration: 1 });
 
-    // dots fade in
-    gsap.fromTo(
-      dotsRef.current,
-      { opacity: 0 },
-      {
-        opacity: 1,
-        duration: 1,
-      }
-    );
+      // dots fade in
+      gsap.fromTo(dotsRef.current, { opacity: 0 }, { opacity: 1, duration: 1 });
+    });
   }, [pathname, isMobile]);
 
   useEffect(() => {
@@ -73,14 +59,13 @@ const HeaderImageSplit = ({ data }: any) => {
 
     // basic image loading effect
     if (swipeEffectRef) {
-      gsap.fromTo(
-        swipeEffectRef,
-        { xPercent: -100 },
-        {
-          xPercent: 100,
-          duration: 1,
-        }
-      );
+      loadGsap().then(({ gsap }) => {
+        gsap.fromTo(
+          swipeEffectRef,
+          { xPercent: -100 },
+          { xPercent: 100, duration: 1 }
+        );
+      });
     }
   }, [pathname, isMobile, swipeEffectRef]);
 
@@ -91,16 +76,9 @@ const HeaderImageSplit = ({ data }: any) => {
 
     // banner image loading effect
     if (bannerEffectRef1 && bannerEffectRef2) {
-      gsap.to(bannerEffectRef1, {
-        x: 0,
-        opacity: 0,
-        duration: 1,
-      });
-
-      gsap.to(bannerEffectRef2, {
-        x: 0,
-        opacity: 0,
-        duration: 1,
+      loadGsap().then(({ gsap }) => {
+        gsap.to(bannerEffectRef1, { x: 0, opacity: 0, duration: 1 });
+        gsap.to(bannerEffectRef2, { x: 0, opacity: 0, duration: 1 });
       });
     }
   }, [pathname, isMobile, bannerEffectRef1, bannerEffectRef2]);
@@ -118,42 +96,54 @@ const HeaderImageSplit = ({ data }: any) => {
       return;
     }
 
-    const ctx = gsap.context(() => {
-      // banner image parallax
-      gsap.to(bannerGroupRef.current, {
-        scrollTrigger: {
-          trigger: parentRef.current,
-          scrub: 1,
-          start: 'top top',
-          end: 'center top',
-        },
-        yPercent: 23,
-      });
+    let ctx: { revert: () => void } | undefined;
+    let cancelled = false;
 
-      // circle parallax
-      gsap.to(circleRef.current, {
-        scrollTrigger: {
-          trigger: parentRef.current,
-          scrub: 1,
-          start: 'top top',
-          end: 'center top',
-        },
-        x: '-73vw',
-      });
+    loadGsap().then(({ gsap }) => {
+      if (cancelled) {
+        return;
+      }
 
-      // dots grid parallax
-      gsap.to(dotsRef.current, {
-        scrollTrigger: {
-          trigger: parentRef.current,
-          scrub: 1,
-          start: 'top top',
-          end: 'center top',
-        },
-        yPercent: -25,
-      });
-    }, parentRef);
+      ctx = gsap.context(() => {
+        // banner image parallax
+        gsap.to(bannerGroupRef.current, {
+          scrollTrigger: {
+            trigger: parentRef.current,
+            scrub: 1,
+            start: 'top top',
+            end: 'center top',
+          },
+          yPercent: 23,
+        });
 
-    return () => ctx.revert();
+        // circle parallax
+        gsap.to(circleRef.current, {
+          scrollTrigger: {
+            trigger: parentRef.current,
+            scrub: 1,
+            start: 'top top',
+            end: 'center top',
+          },
+          x: '-73vw',
+        });
+
+        // dots grid parallax
+        gsap.to(dotsRef.current, {
+          scrollTrigger: {
+            trigger: parentRef.current,
+            scrub: 1,
+            start: 'top top',
+            end: 'center top',
+          },
+          yPercent: -25,
+        });
+      }, parentRef);
+    });
+
+    return () => {
+      cancelled = true;
+      ctx?.revert();
+    };
   }, [pathname, isMobile]);
 
   return (

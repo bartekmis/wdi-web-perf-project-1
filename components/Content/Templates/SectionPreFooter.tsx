@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { useContext, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { gsap } from 'gsap';
-import ScrollTrigger from 'gsap/dist/ScrollTrigger';
+import { loadGsap } from '@/lib/gsap-lazy';
+import useDetectDevice from '@/hooks/detect-device';
 
 import {
   getSectionSettings,
@@ -21,8 +21,6 @@ const SectionPreFooter = ({ data }: { data: any }) => {
   const partials = useContext(PartialsContext) as PartialsData;
   const pathname = usePathname();
 
-  gsap.registerPlugin(ScrollTrigger);
-
   const sectionSettings: SectionSettings = {
     bgColour: data.section_background_colour,
     paddingTop: data.section_padding_top,
@@ -35,21 +33,42 @@ const SectionPreFooter = ({ data }: { data: any }) => {
   const parentRef = useRef<HTMLElement>(null);
   const dotsRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.to(dotsRef.current, {
-        scrollTrigger: {
-          trigger: parentRef.current,
-          scrub: 1,
-          start: 'top-=500 top',
-          end: 'top top',
-        },
-        right: '0%',
-      });
-    }, parentRef);
+  const isMobile = useDetectDevice().isMobile();
 
-    return () => ctx.revert();
-  }, [pathname]);
+  // Decorative dot-grid parallax. Desktop only, matching HeaderImageSplit and
+  // the Curtains components, and gsap is now imported lazily so mobile never
+  // downloads or evaluates it. See lib/gsap-lazy.ts.
+  useEffect(() => {
+    if (isMobile) {
+      return;
+    }
+
+    let ctx: { revert: () => void } | undefined;
+    let cancelled = false;
+
+    loadGsap().then(({ gsap }) => {
+      if (cancelled) {
+        return;
+      }
+
+      ctx = gsap.context(() => {
+        gsap.to(dotsRef.current, {
+          scrollTrigger: {
+            trigger: parentRef.current,
+            scrub: 1,
+            start: 'top-=500 top',
+            end: 'top top',
+          },
+          right: '0%',
+        });
+      }, parentRef);
+    });
+
+    return () => {
+      cancelled = true;
+      ctx?.revert();
+    };
+  }, [pathname, isMobile]);
 
   return (
     <section
