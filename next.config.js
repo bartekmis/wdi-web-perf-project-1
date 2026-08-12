@@ -5,8 +5,55 @@ if (!process.env.WORDPRESS_API_URL) {
   `)
 }
 
+// Origin of the imgix source, e.g. https://k2space-staging.imgix.net.
+// NEXT_PUBLIC_IMGIX_URL also carries a path prefix (/app/uploads/), which the
+// loader keeps in the request path, so only the origin belongs here.
+const IMGIX_ORIGIN = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_IMGIX_URL || '').origin
+  } catch {
+    return null
+  }
+})()
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Same-origin passthrough to imgix, added 2026-08-12.
+  //
+  // WHY: the hero is the LCP element on nearly every page and it was served
+  // straight from k2space-staging.imgix.net - a SECOND origin. The browser had
+  // to spend a full DNS + TCP + TLS handshake before its first byte, even
+  // though next/image already emits a <link rel=preload> for it. Lighthouse's
+  // simulated mobile profile charges ~562ms of latency per request, and the
+  // LCP breakdown showed ~1700ms of "load delay" for a 42.5KB image that the
+  // observed timeline finishes in 153ms. A <link rel=preconnect> did not
+  // recover it (Lighthouse's simulator does not credit preconnect on the LCP
+  // path, and it only ever overlaps the handshake - it cannot remove it).
+  //
+  // Routing images through our own origin means they reuse the HTTP/2
+  // connection the document already opened: no second handshake at all, and
+  // the browser's own priorities apply across all of them on one connection.
+  // imgix still does the actual work - format negotiation (auto=format),
+  // fitting and resizing all still happen there, and the Accept header that
+  // drives AVIF/WebP selection is forwarded by the rewrite. Nothing is
+  // resized on our server, so this needs no `sharp` and costs no CPU here.
+  // Cloudflare caches the responses at the edge under our hostname.
+  //
+  // If this ever needs reverting, revert the loader in
+  // components/Components/ContentImage.tsx at the same time - the two halves
+  // only work together.
+  async rewrites() {
+    if (!IMGIX_ORIGIN) {
+      return []
+    }
+
+    return [
+      {
+        source: '/_img/:path*',
+        destination: `${IMGIX_ORIGIN}/:path*`,
+      },
+    ]
+  },
   // Produces a self-contained .next/standalone bundle (server.js + traced
   // node_modules) so the CI runner can rsync a minimal artifact to the server.
   output: 'standalone',

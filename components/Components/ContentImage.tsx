@@ -17,6 +17,13 @@ type MediaItem = {
   sourceUrl: string;
 };
 
+// Returns a SAME-ORIGIN url. `/_img/*` is rewritten to the imgix origin in
+// next.config.js, so imgix still resizes and negotiates the format - the only
+// thing that changes is which connection the browser fetches over.
+//
+// This exists because the LCP image was costing a whole extra DNS+TCP+TLS
+// handshake on a second origin. See the long comment on `rewrites()` in
+// next.config.js; the two halves only work together, so revert them together.
 const imgixLoader = ({ src, width, quality }: any) => {
   const url = new URL(`${process.env.NEXT_PUBLIC_IMGIX_URL}${src}`);
   const params = url.searchParams;
@@ -24,7 +31,9 @@ const imgixLoader = ({ src, width, quality }: any) => {
   params.set('fit', params.get('fit') || 'max');
   params.set('w', params.get('w') || width.toString());
   params.set('q', (quality && quality.toString()) || '90');
-  return url.href;
+  // Keep imgix's path (it includes the /app/uploads prefix) and its query,
+  // drop only the origin.
+  return `/_img${url.pathname}${url.search}`;
 };
 
 const ContentImage = forwardRef(function ContentImage(
