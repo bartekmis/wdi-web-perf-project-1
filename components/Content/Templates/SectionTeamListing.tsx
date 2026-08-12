@@ -5,6 +5,14 @@ import dynamic from 'next/dynamic';
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 import { useInView } from 'react-intersection-observer';
 
+// MOVED to module scope 2026-08-12. Created inside the component body this
+// was a new component type on every render, so React remounted the lazy
+// subtree instead of updating it. Any `inView` gating around its usage is
+// unaffected - that still controls when it renders.
+const TeamListingSlider = dynamic(
+  () => import('../../Components/Swiper/TeamListingSlider')
+);
+
 const SectionTeamListing = ({ data }: { data: any }) => {
   const sectionSettings: SectionSettings = {
     bgColour: data.section_background_colour,
@@ -15,9 +23,6 @@ const SectionTeamListing = ({ data }: { data: any }) => {
     textAlignment: data.section_text_alignment,
   };
 
-  const TeamListingSlider = dynamic(
-    () => import('../../Components/Swiper/TeamListingSlider')
-  );
 
   const { ref, inView } = useInView({
     threshold: 0,

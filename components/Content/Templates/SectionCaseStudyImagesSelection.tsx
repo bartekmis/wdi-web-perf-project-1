@@ -9,6 +9,14 @@ import { useInView } from 'react-intersection-observer';
 import dynamic from 'next/dynamic';
 import Headline from '@/components/Components/Headline';
 
+// MOVED to module scope 2026-08-12. Created inside the component body this
+// was a new component type on every render, so React remounted the lazy
+// subtree instead of updating it. Any `inView` gating around its usage is
+// unaffected - that still controls when it renders.
+const ImagesSelectionSlider = dynamic(
+  () => import('../../Components/Swiper/ImagesSelectionSlider')
+);
+
 const SectionCaseStudyImagesSelection = ({ data }: { data: any }) => {
   const sectionSettings: SectionSettings = {
     bgColour: data.section_background_colour,
@@ -19,9 +27,6 @@ const SectionCaseStudyImagesSelection = ({ data }: { data: any }) => {
     textAlignment: data.section_text_alignment,
   };
 
-  const ImagesSelectionSlider = dynamic(
-    () => import('../../Components/Swiper/ImagesSelectionSlider')
-  );
 
   const { ref, inView } = useInView({
     threshold: 0,

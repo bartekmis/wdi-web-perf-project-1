@@ -21,6 +21,15 @@ import Testimonial from '@/components/Components/Testimonial';
 import DecorationLine from '@/components/Components/DecorationLine';
 import Headline from '@/components/Components/Headline';
 
+// MOVED to module scope 2026-08-12. This used to be created inside the
+// component body, so every render produced a NEW component type. React
+// compares types by identity, so it tore down the WebGL canvas and rebuilt it
+// on each parent render instead of updating it. The `inView` gating below is
+// correct and stays - this only stops the remounting.
+const DynamicFeaturedCaseStudy = dynamic(
+  () => import('../../Components/Curtains/CurtainsFeaturedCaseStudy')
+);
+
 const SectionFeaturedCaseStudy = ({ data }: { data: any }) => {
   const [caseStudy, setCaseStudy] = useState<CaseStudy>();
 
@@ -41,10 +50,6 @@ const SectionFeaturedCaseStudy = ({ data }: { data: any }) => {
     threshold: 0,
     triggerOnce: true,
   });
-
-  const DynamicFeaturedCaseStudy = dynamic(
-    () => import('../../Components/Curtains/CurtainsFeaturedCaseStudy')
-  );
 
   useEffect(() => {
     const handleCaseStudies = () => {
