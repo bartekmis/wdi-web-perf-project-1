@@ -106,6 +106,18 @@ const HeaderImageSplit = ({ data }: any) => {
   }, [pathname, isMobile, bannerEffectRef1, bannerEffectRef2]);
 
   useEffect(() => {
+    // CHANGED 2026-08-12: bail out on mobile, like the three effects above.
+    // This is the hero that contains the LCP image. Registering three
+    // ScrollTriggers here runs during hydration and reads geometry straight
+    // after React has mutated the DOM, which showed up as a forced reflow in
+    // the trace and as LCP "render delay" - the image had finished
+    // downloading and was waiting on the main thread to paint.
+    // The effect is a decorative desktop parallax; the surrounding effects
+    // were already desktop-only, so this only makes the file consistent.
+    if (isMobile) {
+      return;
+    }
+
     const ctx = gsap.context(() => {
       // banner image parallax
       gsap.to(bannerGroupRef.current, {
@@ -142,7 +154,7 @@ const HeaderImageSplit = ({ data }: any) => {
     }, parentRef);
 
     return () => ctx.revert();
-  }, [pathname]);
+  }, [pathname, isMobile]);
 
   return (
     <header

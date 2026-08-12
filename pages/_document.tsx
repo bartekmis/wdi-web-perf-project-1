@@ -1,11 +1,41 @@
 import { Html, Head, Main, NextScript } from "next/document";
 
+// Origin that serves every content image (the LCP element on most pages).
+// Derived from the media URL so it cannot drift from the imgix loader in
+// components/Components/ContentImage.tsx.
+const imgixOrigin = (() => {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_IMGIX_URL || "").origin;
+  } catch {
+    return null;
+  }
+})();
+
 export default function Document() {
   const gtmId = process.env.NEXT_PUBLIC_GTM_ID;
 
   return (
     <Html lang="en">
       <Head>
+        {/* ADDED 2026-08-12. These two are FIRST in <head> on purpose: a
+            preconnect is only worth anything if the handshake starts before
+            the parser reaches whatever needs the connection.
+
+            imgix serves the hero, which Lighthouse identifies as the LCP
+            element. next/image already emits a <link rel=preload> for it
+            (priority), but that preload sits further down <head>, so the
+            DNS+TCP+TLS to a cold origin was still on the critical path:
+            the LCP breakdown showed 769ms of Load Delay and 1505ms of Load
+            Time for an image that is only 42.5KB - almost all of it
+            connection setup, not bytes.
+
+            No `crossOrigin` on the imgix hint: <img> fetches these in
+            no-cors mode, and a crossorigin preconnect would open a SEPARATE
+            connection that the image then cannot reuse - actively worse than
+            no hint at all. The font preconnects that used to live here did
+            need it; these do not. */}
+        {imgixOrigin && <link rel="preconnect" href={imgixOrigin} />}
+        <link rel="preconnect" href="https://cdn-cookieyes.com" />
         {/* CookieYes consent management.
             CHANGED 2026-08-12: was a bare sync <script> - the parser stopped at
             this tag and could not reach <body> until the file had been fetched
