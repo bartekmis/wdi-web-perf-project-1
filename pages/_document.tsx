@@ -6,6 +6,13 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
+        {/* CookieYes consent management - load first (sync by design) */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script
+          id="cookieyes"
+          type="text/javascript"
+          src="https://cdn-cookieyes.com/client_data/92a68bd2b7ccd68375efe4a3592b2d33/script.js"
+        ></script>
         <meta name="robots" content="noindex, nofollow"></meta>
         {/* Only preconnect to origins we actually request. Both of these are
             used by the Roboto Slab stylesheet below (googleapis serves the CSS,
