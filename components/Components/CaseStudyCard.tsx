@@ -35,11 +35,14 @@ const CaseStudyCard = ({ caseStudy }: { caseStudy: CaseStudy }) => {
                 inView ? 'animated' : ''
               }`}
             >
+              {/* Capped by max-w-[144px]; without `sizes` next/image sizes the
+                  srcset off the multi-thousand-pixel WP original. */}
               <ContentImage
                 className='w-auto max-w-[144px] h-[36px] md:h-[48px] object-contain'
                 id={caseStudy.lead.logo.id}
                 width={+caseStudy.lead.logo.width}
                 height={+caseStudy.lead.logo.height}
+                sizes='144px'
               />
             </div>
           </div>

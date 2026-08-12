@@ -60,6 +60,7 @@ const SectionLogoGrid = ({ data }: { data: any }) => {
                       id={logo.image}
                       width={logo.image_width}
                       height={logo.image_height}
+                      sizes='(max-width: 767px) 120px, 200px'
                     />
                   </ConditionalWrapper>
                 </figure>

@@ -55,6 +55,7 @@ const SectionCaseStudyPortraitAndText = ({ data }: { data: any }) => {
                 <ContentImage
                   className='absolute w-full h-full object-cover'
                   id={data.image}
+                  sizes='(max-width: 767px) 100vw, 50vw'
                 />
               </div>
 
