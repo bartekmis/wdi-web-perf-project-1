@@ -22,7 +22,15 @@ const nextConfig = {
     // The header logo is width={120}; with the old list topping out at 100,
     // both 120 and 240 fell through to deviceSizes[0] and the page requested
     // _next/image?w=640 for a 120x60 slot.
-    imageSizes: [20, 33, 40, 50, 60, 80, 90, 100, 120, 240],
+    // 160 and 320 added 2026-08-17, to close the gap between 240 and the first
+    // deviceSize (640).
+    // The case-study logos declare `sizes='144px'`. On the Moto G Power profile
+    // (DPR 1.75) the browser needs 144 * 1.75 = 252 device px, and with the old
+    // list the smallest candidate at or above 252 was 640 - so declaring the
+    // correct `sizes` still fetched a 640px-wide logo for a 105px slot.
+    // Every value here must stay below deviceSizes[0]; next/image treats
+    // imageSizes as the set used for images smaller than one device width.
+    imageSizes: [20, 33, 40, 50, 60, 80, 90, 100, 120, 160, 240, 320],
     domains: ['k2space-backend.bigpic.dev', 'k2space.local', 'k2space-staging.imgix.net', 'k2space.imgix.net', 'cms.k2space.co.uk'],
   },
   // Serve imgix through our own hostname so content images reuse the
