@@ -9,14 +9,6 @@ import {
 import { SectionSettings } from '@/types/theme';
 import Headline from '@/components/Components/Headline';
 
-// MOVED to module scope 2026-08-12. Created inside the component body this
-// was a new component type on every render, so React remounted the lazy
-// subtree instead of updating it. Any `inView` gating around its usage is
-// unaffected - that still controls when it renders.
-const ProcessSlider = dynamic(
-  () => import('../../Components/Swiper/ProcessSlider')
-);
-
 const SectionProcess = ({ data }: { data: any }) => {
   const sectionSettings: SectionSettings = {
     bgColour: data.section_background_colour,
@@ -32,6 +24,9 @@ const SectionProcess = ({ data }: { data: any }) => {
     triggerOnce: true,
   });
 
+  const ProcessSlider = dynamic(
+    () => import('../../Components/Swiper/ProcessSlider')
+  );
 
   return (
     <section

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { loadGsap } from '@/lib/gsap-lazy';
+import { gsap } from 'gsap';
+import ScrollTrigger from 'gsap/dist/ScrollTrigger';
 
 import {
   getSectionSettings,
@@ -18,6 +19,7 @@ import DecorationLine from '@/components/Components/DecorationLine';
 import Headline from '@/components/Components/Headline';
 
 const SectionTextAndDoubleImage = ({ data }: { data: any }) => {
+  gsap.registerPlugin(ScrollTrigger);
 
   const sectionSettings: SectionSettings = {
     bgColour: data.section_background_colour,
@@ -32,63 +34,46 @@ const SectionTextAndDoubleImage = ({ data }: { data: any }) => {
   const circleRef = useRef<HTMLDivElement>(null);
   const dotsRef = useRef<HTMLDivElement>(null);
 
-  // NOT gated on mobile, unlike SectionPreFooter: the decorations below ship
-  // with `scale-0` / `opacity-0` in their className and it is these tweens
-  // that reveal them, so skipping the effect would leave them invisible
-  // forever. gsap is only made lazy here - the animation still runs
-  // everywhere, it just stops blocking hydration. See lib/gsap-lazy.ts.
   useEffect(() => {
-    let ctx: { revert: () => void } | undefined;
-    let cancelled = false;
+    const ctx = gsap.context(() => {
+      gsap.to(circleRef.current, {
+        scrollTrigger: {
+          trigger: parentRef.current,
+          start: 'top-=200 top',
+        },
+        scale: 1,
+      });
 
-    loadGsap().then(({ gsap }) => {
-      if (cancelled) {
-        return;
-      }
+      gsap.to(dotsRef.current, {
+        scrollTrigger: {
+          trigger: parentRef.current,
+          start: 'top-=200 top',
+        },
+        opacity: 1,
+      });
 
-      ctx = gsap.context(() => {
-        gsap.to(circleRef.current, {
-          scrollTrigger: {
-            trigger: parentRef.current,
-            start: 'top-=200 top',
-          },
-          scale: 1,
-        });
+      gsap.to(circleRef.current, {
+        scrollTrigger: {
+          trigger: parentRef.current,
+          scrub: 1,
+          start: 'top-=200 top',
+          end: 'center top',
+        },
+        y: '-96px',
+      });
 
-        gsap.to(dotsRef.current, {
-          scrollTrigger: {
-            trigger: parentRef.current,
-            start: 'top-=200 top',
-          },
-          opacity: 1,
-        });
+      gsap.to(dotsRef.current, {
+        scrollTrigger: {
+          trigger: parentRef.current,
+          scrub: 1,
+          start: 'top-=200 top',
+          end: 'center top',
+        },
+        y: '96px',
+      });
+    }, parentRef);
 
-        gsap.to(circleRef.current, {
-          scrollTrigger: {
-            trigger: parentRef.current,
-            scrub: 1,
-            start: 'top-=200 top',
-            end: 'center top',
-          },
-          y: '-96px',
-        });
-
-        gsap.to(dotsRef.current, {
-          scrollTrigger: {
-            trigger: parentRef.current,
-            scrub: 1,
-            start: 'top-=200 top',
-            end: 'center top',
-          },
-          y: '96px',
-        });
-      }, parentRef);
-    });
-
-    return () => {
-      cancelled = true;
-      ctx?.revert();
-    };
+    return () => ctx.revert();
   }, []);
 
   return (

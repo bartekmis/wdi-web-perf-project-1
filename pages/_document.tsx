@@ -6,47 +6,20 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        {/* REMOVED 2026-08-12 (same day it was added): preconnect to the imgix
-            origin. Nothing contacts that host from the browser any more -
-            content images are served same-origin through the `/_img/*` rewrite
-            in next.config.js - so the hint would now buy a handshake nobody
-            uses, which is exactly the waste the 2026-07-28 cleanup removed.
-            The preconnect was the first attempt at this problem and it did not
-            work: a preconnect can only overlap the handshake, it cannot remove
-            it, and Lighthouse's simulator does not credit it on the LCP path.
-            Removing the connection entirely is what actually fixed it. */}
-        <link rel="preconnect" href="https://cdn-cookieyes.com" />
-        {/* CookieYes consent management.
-            CHANGED 2026-08-12: was a bare sync <script> - the parser stopped at
-            this tag and could not reach <body> until the file had been fetched
-            and executed from a cold third-party origin (DNS+TCP+TLS+8.3KB, then
-            344ms of CPU per WebPageTest). `defer` keeps the two properties that
-            actually matter for a consent manager - it still runs before
-            DOMContentLoaded and still runs in document order relative to other
-            deferred scripts - while letting the parser continue immediately.
-            It also stays ahead of GTM, which now loads later still (see
-            components/Components/Analytics.tsx), so consent is still resolved
-            before any tag it gates. DO NOT drop `defer`. */}
+        {/* CookieYes consent management - load first (sync by design) */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
         <script
           id="cookieyes"
           type="text/javascript"
           src="https://cdn-cookieyes.com/client_data/92a68bd2b7ccd68375efe4a3592b2d33/script.js"
-          defer
         ></script>
         <meta name="robots" content="noindex, nofollow"></meta>
-        {/* REMOVED 2026-08-12: preconnect to fonts.googleapis.com and
-            fonts.gstatic.com, together with the Roboto Slab stylesheet they
-            served. DO NOT RE-ADD.
-            Roboto Slab was never part of this design - it existed only in the
-            `body { font-family: ... }` rule that 3f9eae0 added to globals.scss
-            (removed in the same change). The real design font is Archivo,
-            self-hosted and preloaded through next/font in _app.tsx.
-            Cost removed: one render-blocking stylesheet on a cold cross-origin
-            host, two speculative handshakes out of the 6-connection mobile
-            budget, and 54KB of woff2 from fonts.gstatic.com. The stylesheet was
-            requested with `display=block`, i.e. FOIT - text stayed invisible
-            for up to 3s while that chain resolved, which is exactly the window
-            FCP measures. */}
+        {/* Only preconnect to origins we actually request. Both of these are
+            used by the Roboto Slab stylesheet below (googleapis serves the CSS,
+            gstatic serves the woff2). If that font is ever self-hosted, delete
+            these two as well. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* REMOVED 2026-07-28: preconnect to connect.facebook.net,
             www.google-analytics.com, cdn.jsdelivr.net, s3.amazonaws.com.
             DO NOT RE-ADD without checking the waterfall first.
@@ -81,27 +54,31 @@ export default function Document() {
             pulling recaptcha__en.js (382,189 B / 513ms CPU, per WPT) and one
             extra cold origin (www.gstatic.com).
             If a page ever needs reCAPTCHA, load it on that page, on demand. */}
-        {/* DebugBear RUM. Self-deferring: the snippet only registers error
-            listeners synchronously and appends an async <script>, so it costs
-            no parser time. Kept early so it captures errors from the start. */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;700&display=block"
+        />
+        {/* DebugBear RUM - load early so it captures errors from the start */}
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){var dbpr=100;if(Math.random()*100>100-dbpr){var d="dbbRum",w=window,o=document,a=addEventListener,scr=o.createElement("script");scr.async=!0;w[d]=w[d]||[];w[d].push(["presampling",dbpr]);["error","unhandledrejection"].forEach(function(t){a(t,function(e){w[d].push([t,e])});});scr.src="https://cdn.debugbear.com/OsowRdI4ZOnc.js";o.head.appendChild(scr);}})()`,
           }}
         />
-        {/* REMOVED 2026-08-12: the second GTM container (NEXT_PUBLIC_GTM_ID,
-            GTM-P5KBGQN9), injected here with `j.async=false`.
-            Two problems, both fixed by deleting it:
-            1. DUPLICATE. components/Components/Analytics.tsx already loads a GTM
-               container (GTM-K6G8DFP). Both were live, so every page load pulled
-               two containers (162KB + 115KB, 1196ms + 179ms CPU per WPT) and
-               fired overlapping tag stacks.
-            2. `j.async=false` on a dynamically-inserted script does NOT mean
-               "defer" - it makes the script parser-blocking-equivalent: it must
-               execute in order before the parser continues past the insertion
-               point. That is the single worst way to load a tag manager.
-            GTM is now loaded once, lazily, from Analytics.tsx.
-            DO NOT re-add a container here. */}
+        {gtmId && (
+          <>
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+                    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+                    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=false;j.src=
+                    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+                    })(window,document,'script','dataLayer','${gtmId}');
+                  `,
+              }}
+            />
+          </>
+        )}
       </Head>
       <body>
         {gtmId && (

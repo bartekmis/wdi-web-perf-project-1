@@ -18,14 +18,6 @@ import dynamic from 'next/dynamic';
 import { useInView } from 'react-intersection-observer';
 import Headline from '@/components/Components/Headline';
 
-// MOVED to module scope 2026-08-12, same reason as in
-// SectionFeaturedCaseStudy: created in the component body it was a new
-// component type every render, so React remounted each WebGL card instead of
-// updating it.
-const DynamicCurtainsCaseStudyCard = dynamic(
-  () => import('../../Components/Curtains/CurtainsCaseStudyCard')
-);
-
 const SectionFeaturedCaseStudies = ({ data }: { data: any }) => {
   const router = useRouter();
   const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([]);
@@ -49,6 +41,10 @@ const SectionFeaturedCaseStudies = ({ data }: { data: any }) => {
     threshold: 0,
     triggerOnce: true,
   });
+
+  const DynamicCurtainsCaseStudyCard = dynamic(
+    () => import('../../Components/Curtains/CurtainsCaseStudyCard')
+  );
 
   useEffect(() => {
     const handleCaseStudies = () => {

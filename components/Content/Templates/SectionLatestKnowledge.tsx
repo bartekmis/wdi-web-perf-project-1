@@ -15,14 +15,6 @@ import { KnowledgeContext } from '@/contexts/knowledge';
 import { useInView } from 'react-intersection-observer';
 import Headline from '@/components/Components/Headline';
 
-// MOVED to module scope 2026-08-12. Created inside the component body this
-// was a new component type on every render, so React remounted the lazy
-// subtree instead of updating it. Any `inView` gating around its usage is
-// unaffected - that still controls when it renders.
-const CardsSlider = dynamic(
-  () => import('../../Components/Swiper/CardsSlider')
-);
-
 const SectionLatestKnowledge = ({ data }: { data: any }) => {
   const router = useRouter();
   const [articles, setArticles] = useState<KnowledgeArticle[]>([]);
@@ -42,6 +34,9 @@ const SectionLatestKnowledge = ({ data }: { data: any }) => {
   const overridenKnowledgeArticles =
     data.knowledge_articles_overriden as KnowledgeAssociation[];
 
+  const CardsSlider = dynamic(
+    () => import('../../Components/Swiper/CardsSlider')
+  );
 
   const { ref, inView } = useInView({
     threshold: 0,

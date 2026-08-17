@@ -14,14 +14,6 @@ import Decoration from '@/components/Components/Decoration';
 import DecorationLine from '@/components/Components/DecorationLine';
 import Headline from '@/components/Components/Headline';
 
-// MOVED to module scope 2026-08-12. Created inside the component body this
-// was a new component type on every render, so React remounted the lazy
-// subtree instead of updating it. Any `inView` gating around its usage is
-// unaffected - that still controls when it renders.
-const DynamicCurtainsServicesCard = dynamic(
-  () => import('../../Components/Curtains/CurtainsServicesCard')
-);
-
 const Section50x50ServicesIntro = ({ data }: { data: any }) => {
   const sectionSettings: SectionSettings = {
     bgColour: data.section_background_colour,
@@ -37,6 +29,9 @@ const Section50x50ServicesIntro = ({ data }: { data: any }) => {
     triggerOnce: true,
   });
 
+  const DynamicCurtainsServicesCard = dynamic(
+    () => import('../../Components/Curtains/CurtainsServicesCard')
+  );
 
   return (
     <section

@@ -192,7 +192,6 @@ const CurtainsCaseStudyCard = ({ caseStudy }: { caseStudy: CaseStudy }) => {
             >
               <ContentImage
                 className='w-auto max-w-[144px] h-[36px] md:h-[48px] object-contain'
-                sizes='144px'
                 id={caseStudy.lead.logo.id}
                 width={+caseStudy.lead.logo.width}
                 height={+caseStudy.lead.logo.height}

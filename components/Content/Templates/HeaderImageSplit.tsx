@@ -1,7 +1,8 @@
 import { ReactNode, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { loadGsap } from '@/lib/gsap-lazy';
+import { gsap } from 'gsap';
+import ScrollTrigger from 'gsap/dist/ScrollTrigger';
 
 import Button from '@/components/Components/Button';
 import styles from '@/styles/headers/header-image-split.module.scss';
@@ -17,6 +18,7 @@ import Device from '@/components/Components/Device';
 
 const HeaderImageSplit = ({ data }: any) => {
   const pathname = usePathname();
+  gsap.registerPlugin(ScrollTrigger);
 
   const variants: any = {
     0: '',
@@ -43,13 +45,25 @@ const HeaderImageSplit = ({ data }: any) => {
       return;
     }
 
-    loadGsap().then(({ gsap }) => {
-      // circle scale in
-      gsap.fromTo(circleRef.current, { scale: 0 }, { scale: 1, duration: 1 });
+    // circle scale in
+    gsap.fromTo(
+      circleRef.current,
+      { scale: 0 },
+      {
+        scale: 1,
+        duration: 1,
+      }
+    );
 
-      // dots fade in
-      gsap.fromTo(dotsRef.current, { opacity: 0 }, { opacity: 1, duration: 1 });
-    });
+    // dots fade in
+    gsap.fromTo(
+      dotsRef.current,
+      { opacity: 0 },
+      {
+        opacity: 1,
+        duration: 1,
+      }
+    );
   }, [pathname, isMobile]);
 
   useEffect(() => {
@@ -59,13 +73,14 @@ const HeaderImageSplit = ({ data }: any) => {
 
     // basic image loading effect
     if (swipeEffectRef) {
-      loadGsap().then(({ gsap }) => {
-        gsap.fromTo(
-          swipeEffectRef,
-          { xPercent: -100 },
-          { xPercent: 100, duration: 1 }
-        );
-      });
+      gsap.fromTo(
+        swipeEffectRef,
+        { xPercent: -100 },
+        {
+          xPercent: 100,
+          duration: 1,
+        }
+      );
     }
   }, [pathname, isMobile, swipeEffectRef]);
 
@@ -76,75 +91,58 @@ const HeaderImageSplit = ({ data }: any) => {
 
     // banner image loading effect
     if (bannerEffectRef1 && bannerEffectRef2) {
-      loadGsap().then(({ gsap }) => {
-        gsap.to(bannerEffectRef1, { x: 0, opacity: 0, duration: 1 });
-        gsap.to(bannerEffectRef2, { x: 0, opacity: 0, duration: 1 });
+      gsap.to(bannerEffectRef1, {
+        x: 0,
+        opacity: 0,
+        duration: 1,
+      });
+
+      gsap.to(bannerEffectRef2, {
+        x: 0,
+        opacity: 0,
+        duration: 1,
       });
     }
   }, [pathname, isMobile, bannerEffectRef1, bannerEffectRef2]);
 
   useEffect(() => {
-    // CHANGED 2026-08-12: bail out on mobile, like the three effects above.
-    // This is the hero that contains the LCP image. Registering three
-    // ScrollTriggers here runs during hydration and reads geometry straight
-    // after React has mutated the DOM, which showed up as a forced reflow in
-    // the trace and as LCP "render delay" - the image had finished
-    // downloading and was waiting on the main thread to paint.
-    // The effect is a decorative desktop parallax; the surrounding effects
-    // were already desktop-only, so this only makes the file consistent.
-    if (isMobile) {
-      return;
-    }
+    const ctx = gsap.context(() => {
+      // banner image parallax
+      gsap.to(bannerGroupRef.current, {
+        scrollTrigger: {
+          trigger: parentRef.current,
+          scrub: 1,
+          start: 'top top',
+          end: 'center top',
+        },
+        yPercent: 23,
+      });
 
-    let ctx: { revert: () => void } | undefined;
-    let cancelled = false;
+      // circle parallax
+      gsap.to(circleRef.current, {
+        scrollTrigger: {
+          trigger: parentRef.current,
+          scrub: 1,
+          start: 'top top',
+          end: 'center top',
+        },
+        x: '-73vw',
+      });
 
-    loadGsap().then(({ gsap }) => {
-      if (cancelled) {
-        return;
-      }
+      // dots grid parallax
+      gsap.to(dotsRef.current, {
+        scrollTrigger: {
+          trigger: parentRef.current,
+          scrub: 1,
+          start: 'top top',
+          end: 'center top',
+        },
+        yPercent: -25,
+      });
+    }, parentRef);
 
-      ctx = gsap.context(() => {
-        // banner image parallax
-        gsap.to(bannerGroupRef.current, {
-          scrollTrigger: {
-            trigger: parentRef.current,
-            scrub: 1,
-            start: 'top top',
-            end: 'center top',
-          },
-          yPercent: 23,
-        });
-
-        // circle parallax
-        gsap.to(circleRef.current, {
-          scrollTrigger: {
-            trigger: parentRef.current,
-            scrub: 1,
-            start: 'top top',
-            end: 'center top',
-          },
-          x: '-73vw',
-        });
-
-        // dots grid parallax
-        gsap.to(dotsRef.current, {
-          scrollTrigger: {
-            trigger: parentRef.current,
-            scrub: 1,
-            start: 'top top',
-            end: 'center top',
-          },
-          yPercent: -25,
-        });
-      }, parentRef);
-    });
-
-    return () => {
-      cancelled = true;
-      ctx?.revert();
-    };
-  }, [pathname, isMobile]);
+    return () => ctx.revert();
+  }, [pathname]);
 
   return (
     <header

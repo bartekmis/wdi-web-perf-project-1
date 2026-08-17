@@ -1,5 +1,6 @@
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
+import { useEffect } from 'react';
 import localFont from 'next/font/local';
 
 import '@/styles/globals.scss';
@@ -59,10 +60,16 @@ export const App = ({
   useAnimationOnScroll();
   useHashLinkScroll();
 
-  // REMOVED 2026-08-12: a useEffect that busy-looped for 300ms right after
-  // hydration (added by 3f9eae0 as a course demo). It ran on the main thread
-  // during the exact window Lighthouse measures TBT, so every ms of it landed
-  // in the score. Nothing depended on it. DO NOT RE-ADD.
+  useEffect(() => {
+    const started = performance.now();
+    let acc = 0;
+    while (performance.now() - started < 300) {
+      acc += Math.sqrt(acc + 1);
+    }
+    if (acc < 0) {
+      console.log(acc);
+    }
+  }, []);
 
   return (
     <>

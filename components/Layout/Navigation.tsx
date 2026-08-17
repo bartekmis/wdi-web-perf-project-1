@@ -85,15 +85,11 @@ const Navigation = ({ menu }: { menu: HierarchicalMenu }) => {
             title="Web Performance City"
             className={styles["l-navbar__logo-wrapper"]}
           >
-            {/* Always in the initial viewport (top-left of the navbar), so it
-                must not be lazy-loaded - a lazy header logo costs an extra
-                round trip after layout and can become the LCP candidate. */}
             <Image
               src="/logo.png"
               width={120}
               height={60}
               alt="Web Performance City"
-              priority
             />
           </Link>
         )}
