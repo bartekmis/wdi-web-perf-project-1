@@ -1,6 +1,10 @@
 import { fetchAPI } from '../lib/api-utils';
 
-export const getMediaItems = async () => {
+type ResponseWithHeaders = { setHeader: (name: string, value: string) => void };
+
+export const getMediaItems = async (res?: ResponseWithHeaders) => {
+  const start = Date.now();
+
   const getPaginatedData = async ({
     first,
     last,
@@ -61,6 +65,10 @@ export const getMediaItems = async () => {
     hasNextPage = mediaItems.pageInfo.hasNextPage;
     after = mediaItems.pageInfo.endCursor;
   }
+
+  // Ile trwało pobranie całej biblioteki mediów (wszystkie strony paginacji).
+  // Widoczne w DevTools > Network > Timing danego requestu.
+  res?.setHeader('Server-Timing', `media;dur=${Date.now() - start}`);
 
   return allMediaItems.map((item: any) => item.node);
 };
