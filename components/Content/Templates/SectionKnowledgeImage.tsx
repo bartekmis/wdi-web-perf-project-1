@@ -1,6 +1,6 @@
 import ContentImage from '@/components/Components/ContentImage';
 import { ConditionalWrapper } from '@/lib/helper-utils';
-import Link from 'next/link';
+import Link from '@/components/Components/Link';
 import { ReactNode } from 'react';
 
 const SectionKnowledgeImage = ({ data }: { data: any }) => {

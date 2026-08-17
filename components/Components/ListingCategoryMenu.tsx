@@ -6,7 +6,7 @@ import 'swiper/scss';
 import { CaseStudyCategory } from '@/types/case-study';
 import { FaqCategory } from '@/types/faq';
 import { KnowledgeCategory } from '@/types/knowledge';
-import Link from 'next/link';
+import Link from '@/components/Components/Link';
 
 const ListingCategoryMenu = ({
   categories,

@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Link from 'next/link';
+import Link from '@/components/Components/Link';
 
 import {
   getSectionSettings,

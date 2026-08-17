@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 import { Autoplay } from 'swiper';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import Link from 'next/link';
+import Link from '@/components/Components/Link';
 import 'swiper/scss';
 import 'swiper/scss/autoplay';
 

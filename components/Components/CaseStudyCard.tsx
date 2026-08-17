@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/Components/Link';
 
 import { CaseStudy } from '@/types/case-study';
 import ContentImage from './ContentImage';

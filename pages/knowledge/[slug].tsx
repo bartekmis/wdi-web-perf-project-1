@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import Link from "next/link";
+import Link from '@/components/Components/Link';
 import { useRouter } from "next/router";
 import Head from "next/head";
 import { getFullHead } from "@/lib/helper-utils";

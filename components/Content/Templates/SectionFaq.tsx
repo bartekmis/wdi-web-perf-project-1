@@ -11,7 +11,7 @@ import {
 } from '@/lib/theme-utils';
 import { FaqAssociation, FaqItem } from '@/types/faq';
 import { SectionSettings } from '@/types/theme';
-import Link from 'next/link';
+import Link from '@/components/Components/Link';
 import { useRouter } from 'next/router';
 import { useContext, useEffect, useState } from 'react';
 
