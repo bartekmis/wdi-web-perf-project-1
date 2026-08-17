@@ -89,6 +89,28 @@ const ContentImage = forwardRef(function ContentImage(
     item.mediaDetails.width &&
     item.mediaDetails.height
   ) {
+    // Honour the caller's `priority`. Until 2026-08-17 both branches below
+    // hardcoded `priority={false}` + `loading="lazy"`, which silently discarded
+    // the `priority` every caller passed - including HeaderImageSplit, whose
+    // image IS the LCP element on the homepage.
+    //
+    // Measured cost of that (Lighthouse 13, mobile/simulate, Moto G Power +
+    // Fast 4G), `lcp-discovery-insight` on the hero <img>:
+    //     eagerlyLoaded   false   <- "LCP resources should not use loading=lazy"
+    //     priorityHinted  false   <- "fetchpriority=high should be applied"
+    // A lazy LCP image is not discoverable by the preload scanner, so it was not
+    // even requested until layout had run and the element was near the viewport.
+    //
+    // next/image turns `priority` into loading="eager" + fetchpriority="high"
+    // and, for a non-lazy image, emits a <link rel=preload> in <head> - which is
+    // what puts the hero on the wire during the document parse instead of after
+    // hydration. Passing `loading` alongside `priority` is a runtime warning in
+    // next/image, so let `priority` drive it and only set `loading` when the
+    // image is NOT priority.
+    const priorityProps = priority
+      ? ({ priority: true } as const)
+      : ({ priority: false, loading: 'lazy' } as const);
+
     if (process.env.NEXT_PUBLIC_IMGIX_URL && !isLocal) {
       return (
         <Image
@@ -99,8 +121,7 @@ const ContentImage = forwardRef(function ContentImage(
           alt={item.altText}
           width={item.mediaDetails.width}
           height={item.mediaDetails.height}
-          priority={false}
-          loading="lazy"
+          {...priorityProps}
           id={elementId || ''}
           data-sampler={dataSampler || ''}
           sizes={sizes || ''}
@@ -116,8 +137,7 @@ const ContentImage = forwardRef(function ContentImage(
           alt={item.altText}
           width={item.mediaDetails.width}
           height={item.mediaDetails.height}
-          priority={false}
-          loading="lazy"
+          {...priorityProps}
           id={elementId || ''}
           data-sampler={elementId || ''}
           sizes={sizes || ''}

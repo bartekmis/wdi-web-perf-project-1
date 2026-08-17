@@ -7,11 +7,21 @@
 @import './base/base';
 @import './animate';
 
+// 'Roboto Slab' removed 2026-08-17. It was the ONLY thing on the site that
+// referenced the Google Fonts stylesheet in _document.tsx, and that stylesheet
+// was render-blocking for 866ms (Lighthouse 13, mobile/simulate) with
+// `display=block`, i.e. FOIT - invisible text until it arrived. The design uses
+// Archivo, which is self-hosted and preloaded through next/font in _app.tsx.
+// Leaving 'Roboto Slab' first in the stack meant every visitor waited on a
+// third-party font just to render the fallback of a face this site never wanted.
 body {
-  font-family: 'Roboto Slab', var(--font-archivo), 'Trebuchet MS', Arial, sans-serif;
+  font-family: var(--font-archivo), 'Trebuchet MS', Arial, sans-serif;
 }
 
-img {
-  aspect-ratio: auto;
-  height: auto;
-}
+// REMOVED 2026-08-17: `img { aspect-ratio: auto; height: auto }`.
+// CLS hazard. next/image writes width/height on every <img> so the browser can
+// reserve the box from the intrinsic ratio before any bytes arrive; declaring
+// `aspect-ratio: auto` overrode exactly that, and `height: auto` collapsed the
+// reserved height to 0 until the image decoded. Every image on the page was
+// free to reflow the content below it.
+// DO NOT RE-ADD. If a specific image needs to be fluid, scope the rule to it.

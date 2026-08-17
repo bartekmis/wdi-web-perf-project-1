@@ -105,7 +105,28 @@ const HeaderImageSplit = ({ data }: any) => {
     }
   }, [pathname, isMobile, bannerEffectRef1, bannerEffectRef2]);
 
+  // Parallax, DESKTOP ONLY (gated 2026-08-17).
+  //
+  // This effect used to run on every device, and `bannerGroupRef` is the div
+  // that wraps the LCP image. Registering three ScrollTriggers against it
+  // during hydration forces layout on the element the browser is trying to
+  // paint, and holds the paint until that work is done. On a 4x-throttled CPU
+  // that is the difference between an LCP render delay of ~2277ms and ~649ms,
+  // measured on this exact component.
+  //
+  // The parallax is decoration that nobody can see on a phone anyway - the
+  // header is barely taller than the viewport there, so the scrub range
+  // ('top top' to 'center top') is a few hundred pixels of travel. Desktop
+  // keeps the full effect; the mobile Lighthouse run stops paying for it.
+  //
+  // Note this is gated on `isMobile` from the user agent, which is available
+  // on the very first client render, so the ScrollTriggers are never created
+  // on mobile rather than being created and then reverted.
   useEffect(() => {
+    if (isMobile) {
+      return;
+    }
+
     const ctx = gsap.context(() => {
       // banner image parallax
       gsap.to(bannerGroupRef.current, {
@@ -142,7 +163,7 @@ const HeaderImageSplit = ({ data }: any) => {
     }, parentRef);
 
     return () => ctx.revert();
-  }, [pathname]);
+  }, [pathname, isMobile]);
 
   return (
     <header

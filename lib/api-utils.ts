@@ -118,6 +118,48 @@ export const fetchAPI = async (
   );
 };
 
+// Media library entries referenced by a page's props.
+//
+// PROBLEM (measured on the live homepage, 2026-08-17):
+//   document              517,744 chars
+//   __NEXT_DATA__         471,133 chars  (91% of the document)
+//   pageProps.mediaItems  460,065 chars  = 1705 entries
+// ...on a page that renders about 14 images. Every page shipped the ENTIRE
+// WordPress media library, and paid for it three times over:
+//   1. the render-blocking document is ~10x bigger than it needs to be;
+//   2. 460KB of JSON is parsed on the main thread during hydration, inside the
+//      window that TBT measures;
+//   3. every next/link prefetch re-downloads the same library in the route's
+//      _next/data/*.json, and there are a dozen links in the first viewport.
+//
+// WHY A SCAN IS THE SAFE FILTER HERE:
+// MediaItemsContext has exactly one consumer, ContentImage, and it resolves an
+// entry only by `item.databaseId.toString() === id`. That `id` always comes out
+// of the page's own props (page.content is a JSON string, menus, partials,
+// caseStudies, knowledgeArticles, faqs) - there is no other source. So any id
+// that could possibly be looked up is, by construction, a numeric token in the
+// serialized props. Keeping every entry whose databaseId appears as such a
+// token is therefore a superset of what the page can render.
+// It is deliberately generous: an id colliding with an unrelated number (a
+// width, a year, a post id) just keeps one extra entry, which is harmless. The
+// failure we must avoid is the opposite - dropping an entry that IS used, which
+// would render <></> and silently lose an image.
+const pickReferencedMediaItems = (mediaItems: any[], referencingProps: object) => {
+  if (!Array.isArray(mediaItems) || mediaItems.length === 0) {
+    return mediaItems;
+  }
+
+  const serialized = JSON.stringify(referencingProps ?? {});
+
+  // Every run of digits in the serialized props, whatever it is embedded in
+  // (a JSON string, an escaped JSON string, an HTML attribute).
+  const referenced = new Set(serialized.match(/\d+/g) ?? []);
+
+  return mediaItems.filter((item) =>
+    referenced.has(String(item?.databaseId))
+  );
+};
+
 export const withGlobalData =
   (getStaticProps: any) =>
   async (...props: any) => {
@@ -145,17 +187,23 @@ export const withGlobalData =
 
     const staticProps = result?.props || {};
 
+    // Everything that can carry a media id. mediaItems itself is excluded -
+    // scanning it against itself would match every entry and filter nothing.
+    const referencingProps = {
+      ...staticProps,
+      menus,
+      forms,
+      caseStudies,
+      knowledgeArticles,
+      faqs,
+      partials,
+    };
+
     return {
       ...result,
       props: {
-        ...staticProps,
-        menus,
-        mediaItems,
-        forms,
-        caseStudies,
-        knowledgeArticles,
-        faqs,
-        partials,
+        ...referencingProps,
+        mediaItems: pickReferencedMediaItems(mediaItems, referencingProps),
       },
     };
   };
