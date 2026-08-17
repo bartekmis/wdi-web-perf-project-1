@@ -1,58 +1,90 @@
-import HeaderImageSplit from './Templates/HeaderImageSplit';
-import HeaderSimpleText from './Templates/HeaderSimpleText';
-import HeaderKnowledgeArticle from './Templates/HeaderKnowledgeArticle';
+import dynamic from 'next/dynamic';
 
-import Section100 from './Templates/Section100';
-import Section50x50 from './Templates/Section50x50';
-import Section33x33x33 from './Templates/Section33x33x33';
-import Section25x25x25x25 from './Templates/Section25x25x25x25';
-import Section50x50Image from './Templates/Section50x50Image';
-import SectionBigImage from './Templates/SectionBigImage';
-import SectionHeadingAndText from './Templates/SectionHeadingAndText';
-import SectionLogoTicker from './Templates/SectionLogoTicker';
-import Section50x50ServicesIntro from './Templates/Section50x50ServicesIntro';
-import SectionTextAndDoubleImage from './Templates/SectionTextAndDoubleImage';
-import SectionFeaturedCaseStudy from './Templates/SectionFeaturedCaseStudy';
-import SectionPanningText from './Templates/SectionPanningText';
-import SectionTextWithCta from './Templates/SectionTextWithCta';
-import SectionVideoCta from './Templates/SectionVideoCta';
-import SectionCaseStudyPortraitAndText from './Templates/SectionCaseStudyPortraitAndText';
-import SectionCaseStudyLandscapeAndText from './Templates/SectionCaseStudyLandscapeAndText';
-import SectionCaseStudyEdgeImageAndText from './Templates/SectionCaseStudyEdgeImageAndText';
-import SectionCaseStudyLargeImage from './Templates/SectionCaseStudyLargeImage';
-import SectionCaseStudyTripleImage from './Templates/SectionCaseStudyTripleImage';
-import SectionCaseStudyDoubleImage from './Templates/SectionCaseStudyDoubleImage';
-import SectionCaseStudyTestimonial from './Templates/SectionCaseStudyTestimonial';
-import SectionFeaturedCaseStudies from './Templates/SectionFeaturedCaseStudies';
-import SectionCaseStudyTwoImages from './Templates/SectionCaseStudyTwoImages';
-import SectionCaseStudyImagesSelection from './Templates/SectionCaseStudyImagesSelection';
-import SectionCaseStudyBeforeAndAfter from './Templates/SectionCaseStudyBeforeAndAfter';
-import SectionLatestKnowledge from './Templates/SectionLatestKnowledge';
-import SectionPreFooter from './Templates/SectionPreFooter';
-import SectionKnowledgeText from './Templates/SectionKnowledgeText';
-import HeaderKnowledgeDownload from './Templates/HeaderKnowledgeDownload';
-import SectionKnowledgeFaq from './Templates/SectionKnowledgeFaq';
-import SectionKnowledgeTable from './Templates/SectionKnowledgeTable';
-import SectionKnowledgeImage from './Templates/SectionKnowledgeImage';
-import SectionKnowledgeVideo from './Templates/SectionKnowledgeVideo';
-import SectionKnowledgeMap from './Templates/SectionKnowledgeMap';
-import SectionKnowledgeStandoutCta from './Templates/SectionKnowledgeStandoutCta';
-import SectionKnowledgePanningTextCta from './Templates/SectionKnowledgePanningTextCta';
-import SectionFaq from './Templates/SectionFaq';
-import SectionStandoutCta from './Templates/SectionStandoutCta';
-import SectionStandoutTestimonial from './Templates/SectionStandoutTestimonial';
-import SectionStory from './Templates/SectionStory';
-import SectionTeamListing from './Templates/SectionTeamListing';
-import SectionStandoutFeaturedContent from './Templates/SectionStandoutFeaturedContent';
-import SectionLocationAndMap from './Templates/SectionLocationAndMap';
-import HeaderContact from './Templates/HeaderContact';
-import HeaderWithForm from './Templates/HeaderWithForm';
-import Section50x50Form from './Templates/Section50x50Form';
-import SectionCenteredForm from './Templates/SectionCenteredForm';
-import SectionProcess from './Templates/SectionProcess';
-import SectionLogoGrid from './Templates/SectionLogoGrid';
-import SectionKnowledgeIframe from './Templates/SectionKnowledgeIframe';
-import SectionCaseStudyIframe from './Templates/SectionCaseStudyIframe';
+// EVERY SECTION TEMPLATE IS CODE-SPLIT (2026-08-17).
+//
+// These 54 templates used to be static imports, so every route shipped and
+// evaluated all of them - including gsap, curtainsjs (WebGL), swiper,
+// @react-google-maps/api and react-youtube - no matter which ones it rendered.
+// The homepage renders about 10.
+//
+// That cost shows up as script evaluation on the main thread, which is what
+// Lighthouse's simulated LCP is waiting on. Measured before this change
+// (mobile/simulate, Moto G Power + Fast 4G): Script Evaluation 1475ms total,
+// with chunks 178 and 137 - the template barrel - contributing 347ms + 224ms.
+//
+// `ssr: true` is the important part: the server still renders every template
+// inline, so the HTML is byte-identical and the LCP image stays discoverable
+// by the preload scanner in the initial document. Only the CLIENT bundle is
+// split, so a route downloads and evaluates just the templates it uses.
+//
+// The template() calls MUST stay at module scope. Calling dynamic() inside
+// render creates a new component type on every render, which remounts the
+// whole subtree and throws away its DOM - that regression was shipped once
+// already (fixed in e750ef1) so do not move these inside Content().
+
+// `ssr: true` is next/dynamic's default in the pages router, but it is the one
+// property this whole approach depends on, so it is stated once here rather
+// than left implicit 54 times below.
+// The cast keeps the two template maps below typed exactly as they were:
+// next/dynamic erases the loaded component's props to ComponentType<{}>, which
+// would not satisfy ContentTemplates.
+const template = (loader: () => Promise<any>) =>
+  dynamic(loader, { ssr: true }) as React.FC<ContentTemplateComponent>;
+
+const HeaderImageSplit = template(() => import('./Templates/HeaderImageSplit'));
+const HeaderSimpleText = template(() => import('./Templates/HeaderSimpleText'));
+const HeaderKnowledgeArticle = template(() => import('./Templates/HeaderKnowledgeArticle'));
+const Section100 = template(() => import('./Templates/Section100'));
+const Section50x50 = template(() => import('./Templates/Section50x50'));
+const Section33x33x33 = template(() => import('./Templates/Section33x33x33'));
+const Section25x25x25x25 = template(() => import('./Templates/Section25x25x25x25'));
+const Section50x50Image = template(() => import('./Templates/Section50x50Image'));
+const SectionBigImage = template(() => import('./Templates/SectionBigImage'));
+const SectionHeadingAndText = template(() => import('./Templates/SectionHeadingAndText'));
+const SectionLogoTicker = template(() => import('./Templates/SectionLogoTicker'));
+const Section50x50ServicesIntro = template(() => import('./Templates/Section50x50ServicesIntro'));
+const SectionTextAndDoubleImage = template(() => import('./Templates/SectionTextAndDoubleImage'));
+const SectionFeaturedCaseStudy = template(() => import('./Templates/SectionFeaturedCaseStudy'));
+const SectionPanningText = template(() => import('./Templates/SectionPanningText'));
+const SectionTextWithCta = template(() => import('./Templates/SectionTextWithCta'));
+const SectionVideoCta = template(() => import('./Templates/SectionVideoCta'));
+const SectionCaseStudyPortraitAndText = template(() => import('./Templates/SectionCaseStudyPortraitAndText'));
+const SectionCaseStudyLandscapeAndText = template(() => import('./Templates/SectionCaseStudyLandscapeAndText'));
+const SectionCaseStudyEdgeImageAndText = template(() => import('./Templates/SectionCaseStudyEdgeImageAndText'));
+const SectionCaseStudyLargeImage = template(() => import('./Templates/SectionCaseStudyLargeImage'));
+const SectionCaseStudyTripleImage = template(() => import('./Templates/SectionCaseStudyTripleImage'));
+const SectionCaseStudyDoubleImage = template(() => import('./Templates/SectionCaseStudyDoubleImage'));
+const SectionCaseStudyTestimonial = template(() => import('./Templates/SectionCaseStudyTestimonial'));
+const SectionFeaturedCaseStudies = template(() => import('./Templates/SectionFeaturedCaseStudies'));
+const SectionCaseStudyTwoImages = template(() => import('./Templates/SectionCaseStudyTwoImages'));
+const SectionCaseStudyImagesSelection = template(() => import('./Templates/SectionCaseStudyImagesSelection'));
+const SectionCaseStudyBeforeAndAfter = template(() => import('./Templates/SectionCaseStudyBeforeAndAfter'));
+const SectionLatestKnowledge = template(() => import('./Templates/SectionLatestKnowledge'));
+const SectionPreFooter = template(() => import('./Templates/SectionPreFooter'));
+const SectionKnowledgeText = template(() => import('./Templates/SectionKnowledgeText'));
+const HeaderKnowledgeDownload = template(() => import('./Templates/HeaderKnowledgeDownload'));
+const SectionKnowledgeFaq = template(() => import('./Templates/SectionKnowledgeFaq'));
+const SectionKnowledgeTable = template(() => import('./Templates/SectionKnowledgeTable'));
+const SectionKnowledgeImage = template(() => import('./Templates/SectionKnowledgeImage'));
+const SectionKnowledgeVideo = template(() => import('./Templates/SectionKnowledgeVideo'));
+const SectionKnowledgeMap = template(() => import('./Templates/SectionKnowledgeMap'));
+const SectionKnowledgeStandoutCta = template(() => import('./Templates/SectionKnowledgeStandoutCta'));
+const SectionKnowledgePanningTextCta = template(() => import('./Templates/SectionKnowledgePanningTextCta'));
+const SectionFaq = template(() => import('./Templates/SectionFaq'));
+const SectionStandoutCta = template(() => import('./Templates/SectionStandoutCta'));
+const SectionStandoutTestimonial = template(() => import('./Templates/SectionStandoutTestimonial'));
+const SectionStory = template(() => import('./Templates/SectionStory'));
+const SectionTeamListing = template(() => import('./Templates/SectionTeamListing'));
+const SectionStandoutFeaturedContent = template(() => import('./Templates/SectionStandoutFeaturedContent'));
+const SectionLocationAndMap = template(() => import('./Templates/SectionLocationAndMap'));
+const HeaderContact = template(() => import('./Templates/HeaderContact'));
+const HeaderWithForm = template(() => import('./Templates/HeaderWithForm'));
+const Section50x50Form = template(() => import('./Templates/Section50x50Form'));
+const SectionCenteredForm = template(() => import('./Templates/SectionCenteredForm'));
+const SectionProcess = template(() => import('./Templates/SectionProcess'));
+const SectionLogoGrid = template(() => import('./Templates/SectionLogoGrid'));
+const SectionKnowledgeIframe = template(() => import('./Templates/SectionKnowledgeIframe'));
+const SectionCaseStudyIframe = template(() => import('./Templates/SectionCaseStudyIframe'));
 
 interface ContentTemplateComponent {
   _type: string;
