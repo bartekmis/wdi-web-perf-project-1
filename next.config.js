@@ -25,6 +25,36 @@ const nextConfig = {
     imageSizes: [20, 33, 40, 50, 60, 80, 90, 100, 120, 240],
     domains: ['k2space-backend.bigpic.dev', 'k2space.local', 'k2space-staging.imgix.net', 'k2space.imgix.net', 'cms.k2space.co.uk'],
   },
+  // Serve imgix through our own hostname so content images reuse the
+  // connection the document has already opened.
+  //
+  // WHY: the LCP hero lives on k2space-staging.imgix.net, a second origin. Even
+  // with `priority` (preload + fetchpriority=high) that costs a fresh
+  // DNS + TCP + TLS, and - more importantly - the browser cannot prioritise
+  // across origins, so the hero ends up sharing a separate connection with the
+  // eight case-study logos instead of being prioritised ahead of them.
+  // Measured on the deployed page: 781KB of other bytes were in flight during
+  // the hero's 67ms->276ms download window, and DebugBear's real-throttling lab
+  // put `loadDuration` at 2758ms for a 42.5KB image.
+  //
+  // imgix still does all the resizing - this is a pass-through, nothing is
+  // processed on our server, so no `sharp` and no image CPU on the droplet.
+  async rewrites() {
+    // Guarded so the two stay consistent: ContentImage only emits /_img/* URLs
+    // when NEXT_PUBLIC_IMGIX_URL is set (otherwise it falls back to
+    // NEXT_PUBLIC_MEDIA_URL), so without it there is nothing to rewrite - and
+    // an empty destination would be a build error rather than a no-op.
+    if (!process.env.NEXT_PUBLIC_IMGIX_URL) {
+      return [];
+    }
+
+    return [
+      {
+        source: '/_img/:path*',
+        destination: `${process.env.NEXT_PUBLIC_IMGIX_URL}:path*`,
+      },
+    ];
+  },
   env: {
     NEXT_PUBLIC_ENV: process.env.NEXT_PUBLIC_ENV || 'development'
   }

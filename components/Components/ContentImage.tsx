@@ -17,14 +17,42 @@ type MediaItem = {
   sourceUrl: string;
 };
 
+// Content images are requested from OUR origin at /_img/*, which next.config.js
+// rewrites to imgix. imgix still does every transformation; we only change
+// which hostname the browser talks to, so the image reuses the connection the
+// document already opened and can be prioritised against the page's own
+// resources instead of racing them from a separate origin.
+//
+// FORMAT IS PINNED TO WEBP ON PURPOSE - DO NOT REPLACE `fm` WITH `auto=format`.
+// `auto=format` picks AVIF/WebP/JPEG from the request's Accept header and sets
+// `Vary: Accept`. imgix's own CDN honours that; Cloudflare, which is now in
+// front of these responses because they are served from our hostname, ignores
+// Vary except Accept-Encoding unless "Vary for Images" (Pro+) is enabled.
+// Reproduced against production previously: prime the cache from an
+// AVIF-capable client, then request the same URL with an Accept header that
+// does not include AVIF, and Cloudflare replies HIT with content-type
+// image/avif - a broken hero for any browser without AVIF support.
+// WebP rather than AVIF because it is ~97.6% supported vs ~94.5% (Edge only
+// shipped AVIF in 121). Cost is ~25KB on the hero. Pinning one format also
+// makes imgix drop Vary entirely, so there is a single cacheable variant.
+// TO GET AVIF BACK: enable Cloudflare "Vary for Images", then swap the `fm`
+// block for `params.set('auto', 'format')`.
 const imgixLoader = ({ src, width, quality }: any) => {
-  const url = new URL(`${process.env.NEXT_PUBLIC_IMGIX_URL}${src}`);
+  // Parsed against a dummy base purely so URLSearchParams can do the work;
+  // only the path + query are used in the returned same-origin URL.
+  const url = new URL(`https://imgix.invalid${src.startsWith('/') ? '' : '/'}${src}`);
   const params = url.searchParams;
-  params.set('auto', params.getAll('auto').join(',') || 'format');
   params.set('fit', params.get('fit') || 'max');
   params.set('w', params.get('w') || width.toString());
   params.set('q', (quality && quality.toString()) || '90');
-  return url.href;
+
+  // SVGs are excluded: `fm` would rasterise them. They carry only
+  // `Vary: Accept-Encoding`, which Cloudflare does honour.
+  if (!/\.svg$/i.test(url.pathname)) {
+    params.set('fm', params.get('fm') || 'webp');
+  }
+
+  return `/_img${url.pathname}${url.search}`;
 };
 
 const ContentImage = forwardRef(function ContentImage(

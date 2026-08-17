@@ -21,13 +21,32 @@ import { useEffect } from 'react';
 //
 // The container now carries the CookieYes consent tag too - CookieYes was
 // removed from _document.tsx, where it was a sync, parser-blocking <script>
-// costing 976ms of render-blocking time. Consent therefore rides on this same
-// deferred load, which is why the trigger fires promptly after paint rather
-// than waiting for idle indefinitely: a consent banner that appears seconds
-// late is a compliance problem, not just a UX one.
+// costing 976ms of render-blocking time.
+//
+// WHY THE TRIGGER IS THE LOAD EVENT AND NOT FIRST PAINT.
+// The first version of this file fired on first-contentful-paint plus an idle
+// callback. That is "after first paint" by the letter, and it was still wrong,
+// because first paint happens BEFORE the LCP image has finished downloading -
+// so the container landed in the middle of the LCP window and competed with
+// the hero image for bandwidth. Measured on the deployed page:
+//
+//   LCP image on the wire        67ms -> 276ms
+//   gtm.js starts                187ms, 116.7KB          <- inside that window
+//   total competing bytes during the image download: 781KB
+//
+// and DebugBear's independent lab (real throttling, not Lighthouse's
+// simulator) put the consequence at `loadDuration` 2758ms for a 42.5KB image.
+// Bandwidth during the LCP window is the scarcest resource on the page, and
+// 116.7KB of tag manager is the largest single thing that does not need to be
+// there yet.
+//
+// `load` is still comfortably "after first paint", it is where analytics
+// belongs, and it keeps the consent banner within a second or so of the page
+// being usable. Any interaction still loads the tags immediately, so consent
+// is in place before anything a user does can be measured.
 const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID;
 
-// Hard ceiling on how long we will wait for an idle slot after first paint.
+// Hard ceiling on how long we will wait for an idle slot after load.
 // Reaching this is the expected case on a busy main thread, not the exception.
 const IDLE_TIMEOUT_MS = 2000;
 
@@ -62,25 +81,24 @@ const Analytics = () => {
 
     let done = false;
     const timers: number[] = [];
-    let observer: PerformanceObserver | undefined;
+    let cleanupLoad: (() => void) | undefined;
 
     const run = () => {
       if (done) {
         return;
       }
       done = true;
-      observer?.disconnect();
       timers.forEach((t) => window.clearTimeout(t));
       window.removeEventListener('pointerdown', run);
       window.removeEventListener('keydown', run);
       injectGtm();
     };
 
-    // Once the paint has happened, hand the browser an idle slot to do the
-    // injection in, so the container's own evaluation does not land in the
-    // middle of hydration. requestIdleCallback is not in Safari, hence the
-    // setTimeout fallback.
-    const afterPaint = () => {
+    // Once loading is done, hand the browser an idle slot to do the injection
+    // in, so the container's own evaluation does not land on top of whatever
+    // the main thread is still finishing. requestIdleCallback is not in
+    // Safari, hence the setTimeout fallback.
+    const whenIdle = () => {
       if (typeof w.requestIdleCallback === 'function') {
         w.requestIdleCallback(run, { timeout: IDLE_TIMEOUT_MS });
       } else {
@@ -88,25 +106,11 @@ const Analytics = () => {
       }
     };
 
-    // The actual "after first paint" trigger. A buffered PerformanceObserver
-    // also replays a paint that already happened before this effect ran, which
-    // is the common case - hydration usually starts after FCP.
-    try {
-      observer = new PerformanceObserver((list) => {
-        if (
-          list.getEntries().some((e) => e.name === 'first-contentful-paint')
-        ) {
-          afterPaint();
-        }
-      });
-      observer.observe({ type: 'paint', buffered: true });
-    } catch {
-      // No PerformanceObserver / no paint timing: fall back to the load event.
-      if (document.readyState === 'complete') {
-        afterPaint();
-      } else {
-        window.addEventListener('load', afterPaint, { once: true });
-      }
+    if (document.readyState === 'complete') {
+      whenIdle();
+    } else {
+      window.addEventListener('load', whenIdle, { once: true });
+      cleanupLoad = () => window.removeEventListener('load', whenIdle);
     }
 
     // If the user touches the page before any of the above has fired, load the
@@ -116,12 +120,12 @@ const Analytics = () => {
     window.addEventListener('keydown', run, { once: true });
 
     // Backstop, so the container can never be starved indefinitely on a page
-    // that never reports a paint (e.g. opened in a background tab).
-    timers.push(window.setTimeout(run, 5000));
+    // whose load event never arrives (a stalled subresource, a background tab).
+    timers.push(window.setTimeout(run, 8000));
 
     return () => {
-      observer?.disconnect();
       timers.forEach((t) => window.clearTimeout(t));
+      cleanupLoad?.();
       window.removeEventListener('pointerdown', run);
       window.removeEventListener('keydown', run);
     };
