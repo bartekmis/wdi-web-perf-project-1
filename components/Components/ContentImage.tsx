@@ -139,6 +139,22 @@ const ContentImage = forwardRef(function ContentImage(
       ? ({ priority: true } as const)
       : ({ priority: false, loading: 'lazy' } as const);
 
+    // Omit `sizes` entirely when the caller did not give one. This used to pass
+    // `sizes=""`, which is not the same thing: any `sizes` attribute puts
+    // next/image on its responsive path, where the srcset is built from the
+    // full deviceSizes list, and an empty value makes the browser fall back to
+    // assuming the image is 100vw - so it picks a candidate sized for the whole
+    // viewport. That is how the case-study logos, which render at ~105px inside
+    // a `max-w-[144px]` box, were each being fetched at w=640:
+    //     roald-dahl 20.8KB, toyota 20.0KB, criteo 15.0KB, Netflix-Logo 13.0KB,
+    //     adobe 8.9KB, cadbury 4.7KB   (~78KB, all at w=640)
+    // With no `sizes`, next/image uses the fixed-size path instead and builds
+    // the srcset as [width, width*2] against imageSizes, which is what an image
+    // with known width/height actually wants.
+    // These now share the document's connection (they are same-origin via
+    // /_img/*), so oversizing them costs the LCP image directly.
+    const sizesProp = sizes ? { sizes } : {};
+
     if (process.env.NEXT_PUBLIC_IMGIX_URL && !isLocal) {
       return (
         <Image
@@ -152,7 +168,7 @@ const ContentImage = forwardRef(function ContentImage(
           {...priorityProps}
           id={elementId || ''}
           data-sampler={dataSampler || ''}
-          sizes={sizes || ''}
+          {...sizesProp}
           onLoadingComplete={onLoadingComplete}
         ></Image>
       );
@@ -168,7 +184,7 @@ const ContentImage = forwardRef(function ContentImage(
           {...priorityProps}
           id={elementId || ''}
           data-sampler={elementId || ''}
-          sizes={sizes || ''}
+          {...sizesProp}
           onLoadingComplete={onLoadingComplete}
         ></Image>
       );

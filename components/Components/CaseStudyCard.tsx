@@ -40,6 +40,7 @@ const CaseStudyCard = ({ caseStudy }: { caseStudy: CaseStudy }) => {
                 id={caseStudy.lead.logo.id}
                 width={+caseStudy.lead.logo.width}
                 height={+caseStudy.lead.logo.height}
+                sizes='144px'
               />
             </div>
           </div>

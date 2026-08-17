@@ -53,6 +53,7 @@ const LogoTickerSlider = ({
                   id={caseStudy.lead.logo.id}
                   width={+caseStudy.lead.logo.width}
                   height={+caseStudy.lead.logo.height}
+                  sizes='144px'
                 />
               </Link>
             </SwiperSlide>
@@ -79,6 +80,7 @@ const LogoTickerSlider = ({
                   id={logo.image}
                   width={logo.image_width}
                   height={logo.image_height}
+                  sizes='144px'
                 />
               </ConditionalWrapper>
             </SwiperSlide>
