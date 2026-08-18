@@ -8,7 +8,9 @@
 @import './animate';
 
 body {
-  font-family: 'Roboto Slab', var(--font-archivo), 'Trebuchet MS', Arial, sans-serif;
+  // Roboto Slab jest teraz self-hostowany przez next/font/google (patrz _app.tsx),
+  // zamiast <link> do fonts.googleapis.com na ścieżce krytycznej.
+  font-family: var(--font-roboto-slab), var(--font-archivo), 'Trebuchet MS', Arial, sans-serif;
 }
 
 img {

@@ -19,12 +19,11 @@ export default function Document() {
           src="https://cdn-cookieyes.com/client_data/92a68bd2b7ccd68375efe4a3592b2d33/script.js"
         ></script>
         <meta name="robots" content="noindex, nofollow"></meta>
-        {/* Only preconnect to origins we actually request. Both of these are
-            used by the Roboto Slab stylesheet below (googleapis serves the CSS,
-            gstatic serves the woff2). If that font is ever self-hosted, delete
-            these two as well. */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        {/* REMOVED 2026-08-18: preconnect do fonts.googleapis.com i
+            fonts.gstatic.com. Poprzedni komentarz mówił wprost: "If that font
+            is ever self-hosted, delete these two as well" - i właśnie to się
+            stało (Roboto Slab przeszedł na next/font/google w _app.tsx).
+            Strona nie odpytuje już żadnego z tych hostów. */}
         {/* REMOVED 2026-07-28: preconnect to connect.facebook.net,
             www.google-analytics.com, cdn.jsdelivr.net, s3.amazonaws.com.
             DO NOT RE-ADD without checking the waterfall first.
@@ -59,14 +58,13 @@ export default function Document() {
             pulling recaptcha__en.js (382,189 B / 513ms CPU, per WPT) and one
             extra cold origin (www.gstatic.com).
             If a page ever needs reCAPTCHA, load it on that page, on demand. */}
-        {/* Roboto Slab jest fontem `body`. Przy `display=block` przeglądarka
-            trzyma tekst NIEWIDOCZNY (FOIT) do czasu pobrania pliku - Lighthouse
-            wyceniał to na 555 ms FCP. `swap` maluje od razu fallbackiem
-            i podmienia font po pobraniu. */}
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;700&display=swap"
-        />
+        {/* REMOVED 2026-08-18: <link> do arkusza Roboto Slab z
+            fonts.googleapis.com. DO NOT RE-ADD.
+            Był render-blocking i z obcego origin, więc kosztował pełny
+            DNS+TCP+TLS (~180 ms) zanim w ogóle ujawnił, że plik fontu leży na
+            TRZECIM origin (fonts.gstatic.com, 33 kB). Font jest teraz
+            self-hostowany przez next/font/google w _app.tsx - pobierany przy
+            buildzie, serwowany z naszej domeny, z preloadem. */}
         {/* DebugBear RUM - load early so it captures errors from the start */}
         <script
           dangerouslySetInnerHTML={{
