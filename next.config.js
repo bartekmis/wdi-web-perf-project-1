@@ -32,29 +32,42 @@ const nextConfig = {
     // CLS wazy 25% wyniku, FCP i SI po 10%, a na szybkim laczu FCP i tak jest
     // niskie bez tej sztuczki - wiec bilans wychodzi wyraznie na minus.
   },
-  // EKSPERYMENT 2026-08-18, TYLKO /theme (strona z paleta, nieuzywana publicznie).
-  // Pytanie: czy `Cache-Control: no-transform` powstrzymuje Cloudflare przed
-  // wstrzykiwaniem skryptu bot-detection (`window.__CF$cv$params` ->
-  // /cdn-cgi/challenge-platform/scripts/jsd/main.js)? Ten jeden skrypt to
-  // obecnie CALA roznica miedzy 85 a 100 punktow w Lighthouse przy Fast 4G
-  // (TBT 568 ms vs 10 ms), a nie da sie go odroczyc z poziomu aplikacji.
+  // ZMIANA 2026-08-18: `no-transform` na trasach HTML.
   //
-  // Cloudflare dokumentuje `no-transform` jako wylacznik swoich modyfikacji
-  // odpowiedzi (Rocket Loader, Mirage, Polish, auto minify). Czy obejmuje
-  // rowniez wstrzykiwanie JS Detections - trzeba sprawdzic empirycznie.
+  // Cloudflare doklejal do kazdej odpowiedzi HTML snippet `window.__CF$cv$params`,
+  // ktory laduje /cdn-cgi/challenge-platform/scripts/jsd/main.js (JS Detections
+  // z Bot Management). Ten jeden skrypt wykonywal sie jako pojedyncze dlugie
+  // zadanie ~420 ms i odpowiadal za CALA roznice w wyniku Lighthouse przy
+  // Moto G Power / Fast 4G: 85 punktow z nim, 100 bez niego (TBT 568 ms vs 10 ms).
+  // Z poziomu aplikacji nie da sie go odroczyc - wstrzykiwany jest na brzegu,
+  // juz po naszej odpowiedzi.
   //
-  // Dlatego TYLKO na /theme: gdyby `no-transform` przy okazji wylaczyl
-  // kompresje na brzegu, HTML urosnie z ~28 KB do ~129 KB. Na stronie glownej
-  // byloby to realne pogorszenie dla uzytkownikow; tutaj nic nie kosztuje.
-  // Po pomiarze ten blok znika - w jedna albo w druga strone.
+  // `Cache-Control: no-transform` to udokumentowany przez Cloudflare wylacznik
+  // modyfikacji odpowiedzi. Czy obejmuje takze to wstrzykniecie - sprawdzone
+  // eksperymentalnie na /theme, zanim ruszylem strone glowna:
+  //   /theme z no-transform:  snippet NIE wystepuje, odpowiedz nadal skompresowana
+  //                           (2 752 B na lączu vs 16 893 B surowo)
+  //   / bez no-transform:     snippet obecny, cf-cache-status: MISS (czyli prosto
+  //                           z originu, a nie ze starego cache'u)
+  // Kompresja na brzegu dziala dalej - to byla glowna obawa przy tym naglowku.
+  //
+  // Wartosc jest DOKLADNIE ta, ktora Next ustawia sam dla ISR, plus `no-transform`.
+  // `s-maxage=60` odpowiada `revalidate: 60` z getStaticProps, wiec Cloudflare
+  // nadal cache'uje strone na brzegu (cf-cache-status: HIT, TTFB ~60 ms).
+  // Gdyby to zgubic, kazde wejscie szloby do originu, ktory ma TTFB ~500 ms.
+  //
+  // Zakres celowo omija /_next/ i /api/ - pliki statyczne maja wlasny,
+  // niezmienny Cache-Control (max-age=31536000, immutable) i nie ma powodu
+  // go nadpisywac.
   async headers() {
     return [
       {
-        source: '/theme',
+        source: '/((?!_next/|api/).*)',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=0, must-revalidate, no-transform',
+            value:
+              'max-age=31536000, s-maxage=60, stale-while-revalidate, no-transform',
           },
         ],
       },
