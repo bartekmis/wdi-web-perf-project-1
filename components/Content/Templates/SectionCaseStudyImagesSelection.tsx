@@ -9,14 +9,6 @@ import { useInView } from 'react-intersection-observer';
 import dynamic from 'next/dynamic';
 import Headline from '@/components/Components/Headline';
 
-// dynamic() musi stać w module, nie w ciele komponentu. Wywołane przy każdym
-// renderze tworzy ZA KAŻDYM RAZEM nowy typ komponentu, więc React nie widzi
-// tego samego drzewa - odmontowuje stare i montuje nowe, kasując DOM i stan,
-// a slider (Swiper) inicjalizuje się od zera po każdym renderze rodzica.
-const ImagesSelectionSlider = dynamic(
-  () => import('../../Components/Swiper/ImagesSelectionSlider')
-);
-
 const SectionCaseStudyImagesSelection = ({ data }: { data: any }) => {
   const sectionSettings: SectionSettings = {
     bgColour: data.section_background_colour,
@@ -26,6 +18,10 @@ const SectionCaseStudyImagesSelection = ({ data }: { data: any }) => {
     fontSize: data.section_font_size,
     textAlignment: data.section_text_alignment,
   };
+
+  const ImagesSelectionSlider = dynamic(
+    () => import('../../Components/Swiper/ImagesSelectionSlider')
+  );
 
   const { ref, inView } = useInView({
     threshold: 0,

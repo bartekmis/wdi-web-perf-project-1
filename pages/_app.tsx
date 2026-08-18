@@ -1,7 +1,7 @@
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
+import { useEffect } from 'react';
 import localFont from 'next/font/local';
-import { Roboto_Slab } from 'next/font/google';
 
 import '@/styles/globals.scss';
 import Layout from '@/components/Layout/Layout';
@@ -17,6 +17,7 @@ import CursorContextProvider from '@/contexts/cursor';
 import useFullheightVieportCalculation from '@/hooks/window-height';
 import useAnimationOnScroll from '@/hooks/animation-on-scroll';
 import useHashLinkScroll from '@/hooks/hash-links-scroll';
+import Analytics from '@/components/Components/Analytics';
 import CurtainsContextProvider from '@/contexts/curtains';
 
 // REMOVED 2026-07-28: the three italic faces (Archivo-RegularItalic,
@@ -51,20 +52,6 @@ const fontArchivo = localFont({
   variable: '--font-archivo',
 });
 
-// Roboto Slab jest fontem `body`. Szedł przez <link> do fonts.googleapis.com,
-// czyli render-blocking arkusz z OBCEGO origin na ścieżce krytycznej (osobny
-// DNS + TCP + TLS, ~180 ms), a dopiero on wskazywał plik na fonts.gstatic.com
-// (trzeci origin, 33 kB) - łańcuch o dwa skoki dłuższy niż potrzeba.
-// next/font/google pobiera font przy buildzie i serwuje go z NASZEJ domeny,
-// z automatycznym <link rel=preload> i wyliczonym fallbackiem (size-adjust),
-// więc podmiana fontu nie przesuwa layoutu.
-const fontRobotoSlab = Roboto_Slab({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
-  display: 'swap',
-  variable: '--font-roboto-slab',
-});
-
 export const App = ({
   Component,
   pageProps,
@@ -72,6 +59,17 @@ export const App = ({
   useFullheightVieportCalculation();
   useAnimationOnScroll();
   useHashLinkScroll();
+
+  useEffect(() => {
+    const started = performance.now();
+    let acc = 0;
+    while (performance.now() - started < 300) {
+      acc += Math.sqrt(acc + 1);
+    }
+    if (acc < 0) {
+      console.log(acc);
+    }
+  }, []);
 
   return (
     <>
@@ -90,7 +88,6 @@ export const App = ({
                           {`
                             :root {
                               --font-archivo: ${fontArchivo.style.fontFamily};
-                              --font-roboto-slab: ${fontRobotoSlab.style.fontFamily};
                             }
                           `}
                         </style>
@@ -102,6 +99,7 @@ export const App = ({
                           />
                           <link rel='icon' href='/favicon.ico' />
                         </Head>
+                        <Analytics />
                         <Layout>
                           <Component {...pageProps} />
                         </Layout>

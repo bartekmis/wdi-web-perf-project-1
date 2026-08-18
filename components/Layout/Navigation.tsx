@@ -85,14 +85,11 @@ const Navigation = ({ menu }: { menu: HierarchicalMenu }) => {
             title="Web Performance City"
             className={styles["l-navbar__logo-wrapper"]}
           >
-            {/* Logo jest zawsze w pierwszym viewporcie - domyślny lazy
-                opóźniał je o kolejną rundę odkrywania zasobów. */}
             <Image
               src="/logo.png"
               width={120}
               height={60}
               alt="Web Performance City"
-              priority
             />
           </Link>
         )}

@@ -12,14 +12,6 @@ import dynamic from 'next/dynamic';
 import { useInView } from 'react-intersection-observer';
 import Headline from '@/components/Components/Headline';
 
-// dynamic() musi stać w module, nie w ciele komponentu. Wywołane przy każdym
-// renderze tworzy ZA KAŻDYM RAZEM nowy typ komponentu, więc React nie widzi
-// tego samego drzewa - odmontowuje stare i montuje nowe, kasując DOM i stan,
-// a slider (Swiper) inicjalizuje się od zera po każdym renderze rodzica.
-const LogoTickerSlider = dynamic(
-  () => import('../../Components/Swiper/LogoTickerSlider')
-);
-
 const SectionLogoTicker = ({ data }: { data: any }) => {
   const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([]);
 
@@ -55,6 +47,10 @@ const SectionLogoTicker = ({ data }: { data: any }) => {
     const caseStudies = handleCaseStudies();
     setCaseStudies(caseStudies);
   }, [allCaseStudies, overridenCaseStudies]);
+
+  const LogoTickerSlider = dynamic(
+    () => import('../../Components/Swiper/LogoTickerSlider')
+  );
 
   const { ref, inView } = useInView({
     threshold: 0,

@@ -18,14 +18,6 @@ import dynamic from 'next/dynamic';
 import { useInView } from 'react-intersection-observer';
 import Headline from '@/components/Components/Headline';
 
-// dynamic() musi stać w module, nie w ciele komponentu. Wywołane przy każdym
-// renderze tworzy ZA KAŻDYM RAZEM nowy typ komponentu, więc React nie widzi
-// tego samego drzewa - odmontowuje stare i montuje nowe, kasując DOM i stan,
-// a slider (Swiper) inicjalizuje się od zera po każdym renderze rodzica.
-const DynamicCurtainsCaseStudyCard = dynamic(
-  () => import('../../Components/Curtains/CurtainsCaseStudyCard')
-);
-
 const SectionFeaturedCaseStudies = ({ data }: { data: any }) => {
   const router = useRouter();
   const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([]);
@@ -49,6 +41,10 @@ const SectionFeaturedCaseStudies = ({ data }: { data: any }) => {
     threshold: 0,
     triggerOnce: true,
   });
+
+  const DynamicCurtainsCaseStudyCard = dynamic(
+    () => import('../../Components/Curtains/CurtainsCaseStudyCard')
+  );
 
   useEffect(() => {
     const handleCaseStudies = () => {
