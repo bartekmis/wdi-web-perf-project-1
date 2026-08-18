@@ -32,6 +32,34 @@ const nextConfig = {
     // CLS wazy 25% wyniku, FCP i SI po 10%, a na szybkim laczu FCP i tak jest
     // niskie bez tej sztuczki - wiec bilans wychodzi wyraznie na minus.
   },
+  // EKSPERYMENT 2026-08-18, TYLKO /theme (strona z paleta, nieuzywana publicznie).
+  // Pytanie: czy `Cache-Control: no-transform` powstrzymuje Cloudflare przed
+  // wstrzykiwaniem skryptu bot-detection (`window.__CF$cv$params` ->
+  // /cdn-cgi/challenge-platform/scripts/jsd/main.js)? Ten jeden skrypt to
+  // obecnie CALA roznica miedzy 85 a 100 punktow w Lighthouse przy Fast 4G
+  // (TBT 568 ms vs 10 ms), a nie da sie go odroczyc z poziomu aplikacji.
+  //
+  // Cloudflare dokumentuje `no-transform` jako wylacznik swoich modyfikacji
+  // odpowiedzi (Rocket Loader, Mirage, Polish, auto minify). Czy obejmuje
+  // rowniez wstrzykiwanie JS Detections - trzeba sprawdzic empirycznie.
+  //
+  // Dlatego TYLKO na /theme: gdyby `no-transform` przy okazji wylaczyl
+  // kompresje na brzegu, HTML urosnie z ~28 KB do ~129 KB. Na stronie glownej
+  // byloby to realne pogorszenie dla uzytkownikow; tutaj nic nie kosztuje.
+  // Po pomiarze ten blok znika - w jedna albo w druga strone.
+  async headers() {
+    return [
+      {
+        source: '/theme',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate, no-transform',
+          },
+        ],
+      },
+    ];
+  },
   staticPageGenerationTimeout: 7200,
   reactStrictMode: true,
   images: {
