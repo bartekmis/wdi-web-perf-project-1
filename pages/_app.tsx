@@ -17,7 +17,6 @@ import CursorContextProvider from '@/contexts/cursor';
 import useFullheightVieportCalculation from '@/hooks/window-height';
 import useAnimationOnScroll from '@/hooks/animation-on-scroll';
 import useHashLinkScroll from '@/hooks/hash-links-scroll';
-import Analytics from '@/components/Components/Analytics';
 import CurtainsContextProvider from '@/contexts/curtains';
 
 // REMOVED 2026-07-28: the three italic faces (Archivo-RegularItalic,
@@ -103,7 +102,6 @@ export const App = ({
                           />
                           <link rel='icon' href='/favicon.ico' />
                         </Head>
-                        <Analytics />
                         <Layout>
                           <Component {...pageProps} />
                         </Layout>
