@@ -2,7 +2,7 @@ import Button from '@/components/Components/Button';
 import Decoration from '@/components/Components/Decoration';
 import SectionPreFooter from '@/components/Content/Templates/SectionPreFooter';
 import Image from 'next/image';
-import Link from '@/components/Components/Link';
+import Link from 'next/link';
 import { MdOutlineClose } from 'react-icons/md';
 
 function Error({ statusCode }: any) {

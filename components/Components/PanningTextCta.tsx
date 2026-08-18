@@ -1,5 +1,5 @@
 import { CSSProperties, useEffect, useRef, useState } from 'react';
-import Link from '@/components/Components/Link';
+import Link from 'next/link';
 
 import { getBgColour, getHeadlineSize, getTextColour } from '@/lib/theme-utils';
 import styles from '@/styles/components/panning-text-cta.module.scss';

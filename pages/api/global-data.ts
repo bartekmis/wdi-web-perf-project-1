@@ -27,7 +27,7 @@ export default async function handler(
       partials,
     ] = await Promise.all([
       getMenus(),
-      getMediaItems(res),
+      getMediaItems(),
       getGravityForms(),
       getAllCaseStudies(),
       getAllKnowledgeArticles(),

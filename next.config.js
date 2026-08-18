@@ -22,46 +22,8 @@ const nextConfig = {
     // The header logo is width={120}; with the old list topping out at 100,
     // both 120 and 240 fell through to deviceSizes[0] and the page requested
     // _next/image?w=640 for a 120x60 slot.
-    // 160 and 320 added 2026-08-17, to close the gap between 240 and the first
-    // deviceSize (640).
-    // The case-study logos declare `sizes='144px'`. On the Moto G Power profile
-    // (DPR 1.75) the browser needs 144 * 1.75 = 252 device px, and with the old
-    // list the smallest candidate at or above 252 was 640 - so declaring the
-    // correct `sizes` still fetched a 640px-wide logo for a 105px slot.
-    // Every value here must stay below deviceSizes[0]; next/image treats
-    // imageSizes as the set used for images smaller than one device width.
-    imageSizes: [20, 33, 40, 50, 60, 80, 90, 100, 120, 160, 240, 320],
+    imageSizes: [20, 33, 40, 50, 60, 80, 90, 100, 120, 240],
     domains: ['k2space-backend.bigpic.dev', 'k2space.local', 'k2space-staging.imgix.net', 'k2space.imgix.net', 'cms.k2space.co.uk'],
-  },
-  // Serve imgix through our own hostname so content images reuse the
-  // connection the document has already opened.
-  //
-  // WHY: the LCP hero lives on k2space-staging.imgix.net, a second origin. Even
-  // with `priority` (preload + fetchpriority=high) that costs a fresh
-  // DNS + TCP + TLS, and - more importantly - the browser cannot prioritise
-  // across origins, so the hero ends up sharing a separate connection with the
-  // eight case-study logos instead of being prioritised ahead of them.
-  // Measured on the deployed page: 781KB of other bytes were in flight during
-  // the hero's 67ms->276ms download window, and DebugBear's real-throttling lab
-  // put `loadDuration` at 2758ms for a 42.5KB image.
-  //
-  // imgix still does all the resizing - this is a pass-through, nothing is
-  // processed on our server, so no `sharp` and no image CPU on the droplet.
-  async rewrites() {
-    // Guarded so the two stay consistent: ContentImage only emits /_img/* URLs
-    // when NEXT_PUBLIC_IMGIX_URL is set (otherwise it falls back to
-    // NEXT_PUBLIC_MEDIA_URL), so without it there is nothing to rewrite - and
-    // an empty destination would be a build error rather than a no-op.
-    if (!process.env.NEXT_PUBLIC_IMGIX_URL) {
-      return [];
-    }
-
-    return [
-      {
-        source: '/_img/:path*',
-        destination: `${process.env.NEXT_PUBLIC_IMGIX_URL}:path*`,
-      },
-    ];
   },
   env: {
     NEXT_PUBLIC_ENV: process.env.NEXT_PUBLIC_ENV || 'development'

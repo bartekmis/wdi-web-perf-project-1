@@ -6,40 +6,20 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
+        {/* CookieYes consent management - load first (sync by design) */}
+        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        <script
+          id="cookieyes"
+          type="text/javascript"
+          src="https://cdn-cookieyes.com/client_data/92a68bd2b7ccd68375efe4a3592b2d33/script.js"
+        ></script>
         <meta name="robots" content="noindex, nofollow"></meta>
-
-        {/* REMOVED 2026-08-17: the sync <script src="cdn-cookieyes.com/.../script.js">
-            that used to sit at the top of <head>. It was the single most expensive
-            render blocker on the page: a classic, parser-blocking script, so the
-            parser could not reach <body> until a COLD third-party origin had been
-            resolved, connected, TLS-negotiated and 8,977 B downloaded.
-            Measured (Lighthouse 13, mobile/simulate, Moto G Power + Fast 4G):
-              render-blocking-insight  ->  976ms wasted, the largest single entry.
-            CookieYes is now deployed as a tag INSIDE the GTM container, so consent
-            still loads - just off the critical path, after first paint.
-            DO NOT re-add it here as a <script>. If it ever has to come back into
-            the document, it must be `defer` at minimum. */}
-
-        {/* REMOVED 2026-08-17: <link rel=stylesheet href=fonts.googleapis.com/css2
-            ?family=Roboto+Slab:wght@400;500;700&display=block> plus its two
-            preconnects (fonts.googleapis.com, fonts.gstatic.com).
-            It was render-blocking for 866ms and pulled two woff2 from gstatic, all
-            to serve a face this design never uses - the only thing referencing it
-            was `body { font-family: 'Roboto Slab', ... }` in globals.scss, added by
-            3f9eae0. `display=block` made it worse: FOIT, so text stayed invisible
-            while it loaded. Archivo (self-hosted, next/font, preloaded) is the
-            actual type on this site and now applies unopposed. */}
-
-        {/* Consent (CookieYes) and the tag stack are both delivered by the GTM
-            container, which we deliberately do not load until after first paint
-            (components/Components/Analytics.tsx). These two hints let the DNS +
-            TCP + TLS for those origins happen during idle time instead of being
-            paid serially at the moment the container is finally injected. A
-            preconnect cannot remove a handshake - it can only move it earlier -
-            which is exactly what a deferred third party wants. */}
-        <link rel="preconnect" href="https://www.googletagmanager.com" />
-        <link rel="preconnect" href="https://cdn-cookieyes.com" />
-
+        {/* Only preconnect to origins we actually request. Both of these are
+            used by the Roboto Slab stylesheet below (googleapis serves the CSS,
+            gstatic serves the woff2). If that font is ever self-hosted, delete
+            these two as well. */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* REMOVED 2026-07-28: preconnect to connect.facebook.net,
             www.google-analytics.com, cdn.jsdelivr.net, s3.amazonaws.com.
             DO NOT RE-ADD without checking the waterfall first.
@@ -74,29 +54,31 @@ export default function Document() {
             pulling recaptcha__en.js (382,189 B / 513ms CPU, per WPT) and one
             extra cold origin (www.gstatic.com).
             If a page ever needs reCAPTCHA, load it on that page, on demand. */}
-
-        {/* DebugBear RUM - stays in <head> and stays early. It is the field-data
-            source this whole audit is measured against, it injects itself with
-            `async`, and it must be present before first paint to attribute the
-            paint metrics it reports. It is not render-blocking. */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;700&display=block"
+        />
+        {/* DebugBear RUM - load early so it captures errors from the start */}
         <script
           dangerouslySetInnerHTML={{
             __html: `(function(){var dbpr=100;if(Math.random()*100>100-dbpr){var d="dbbRum",w=window,o=document,a=addEventListener,scr=o.createElement("script");scr.async=!0;w[d]=w[d]||[];w[d].push(["presampling",dbpr]);["error","unhandledrejection"].forEach(function(t){a(t,function(e){w[d].push([t,e])});});scr.src="https://cdn.debugbear.com/OsowRdI4ZOnc.js";o.head.appendChild(scr);}})()`,
           }}
         />
-
-        {/* REMOVED 2026-08-17: the second GTM container that used to be injected
-            from here with `j.async=false`.
-            Two separate containers were loading on every page - this one (from
-            NEXT_PUBLIC_GTM_ID) and a hardcoded one in Analytics.tsx - each
-            pulling its own copy of the tag stack (HubSpot x5, Clarity,
-            LeadForensics, LinkedIn Insight, Demandbase).
-            `j.async=false` is the detail worth remembering: on a script inserted
-            by script, async=false does not mean "sync", it means EXECUTION-ORDERED
-            - the browser still blocks the parser-driven load on it. So the more
-            expensive of the two containers was also the one loaded the worst way.
-            There is now exactly one container, and it is loaded after first paint
-            by components/Components/Analytics.tsx. */}
+        {gtmId && (
+          <>
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+                    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+                    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=false;j.src=
+                    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+                    })(window,document,'script','dataLayer','${gtmId}');
+                  `,
+              }}
+            />
+          </>
+        )}
       </Head>
       <body>
         {gtmId && (

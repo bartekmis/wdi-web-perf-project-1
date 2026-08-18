@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import Link from '@/components/Components/Link';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { getFullHead } from '@/lib/helper-utils';

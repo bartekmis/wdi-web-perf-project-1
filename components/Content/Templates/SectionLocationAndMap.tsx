@@ -5,7 +5,7 @@ import Headline from '@/components/Components/Headline';
 import Map from '@/components/Components/Map';
 import { getSectionSettings, getContainerSize, getHeadlineSize } from '@/lib/theme-utils';
 import { SectionSettings } from '@/types/theme';
-import Link from '@/components/Components/Link';
+import Link from 'next/link';
 
 const SectionLocationAndMap = ({ data }: { data: any }) => {
   const sectionSettings: SectionSettings = {

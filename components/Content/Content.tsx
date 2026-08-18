@@ -1,98 +1,58 @@
-import dynamic from 'next/dynamic';
+import HeaderImageSplit from './Templates/HeaderImageSplit';
+import HeaderSimpleText from './Templates/HeaderSimpleText';
+import HeaderKnowledgeArticle from './Templates/HeaderKnowledgeArticle';
 
-// EVERY SECTION TEMPLATE IS CODE-SPLIT (2026-08-17).
-//
-// These 54 templates used to be static imports, so every route shipped and
-// evaluated all of them - including gsap, curtainsjs (WebGL), swiper,
-// @react-google-maps/api and react-youtube - no matter which ones it rendered.
-// The homepage renders about 10.
-//
-// That cost shows up as script evaluation on the main thread, which is what
-// Lighthouse's simulated LCP is waiting on. Measured before this change
-// (mobile/simulate, Moto G Power + Fast 4G): Script Evaluation 1475ms total,
-// with chunks 178 and 137 - the template barrel - contributing 347ms + 224ms.
-//
-// `ssr: true` is the important part: the server still renders every template
-// inline, so the HTML is byte-identical and the LCP image stays discoverable
-// by the preload scanner in the initial document. Only the CLIENT bundle is
-// split, so a route downloads and evaluates just the templates it uses.
-//
-// TWO RULES FOR THE CALLS BELOW, BOTH LEARNED THE HARD WAY.
-//
-// 1. WRITE `dynamic(() => import('...'))` LITERALLY. Do not wrap it in a
-//    helper, however tidy that looks. Next's SWC `next-dynamic` transform
-//    pattern-matches this exact call shape at build time and attaches
-//    `loadableGenerated` to it, which is what registers the chunk against the
-//    page in the build manifest so it ships with the initial HTML.
-//    A wrapper - `const template = (l) => dynamic(l, {ssr:true})` - is
-//    invisible to that transform. The build then does not know the page needs
-//    these modules, so on the client React hydrates BEFORE their chunks exist,
-//    every dynamic component renders its (null) fallback, and the entire
-//    server-rendered body is wiped and re-inserted a moment later.
-//    Measured cost of exactly that mistake, on this file:
-//        CLS   0.000 -> 0.945 (median, runs up to 1.825)
-//        score    69 -> 45
-//        <script> chunk tags in the HTML   15 -> 5
-//        __NEXT_DATA__.dynamicIds          absent
-//
-// 2. KEEP THEM AT MODULE SCOPE. Calling dynamic() during render creates a new
-//    component type every render, which remounts the subtree and throws away
-//    its DOM (that one was fixed in e750ef1).
-
-const HeaderImageSplit = dynamic(() => import('./Templates/HeaderImageSplit'), { ssr: true });
-const HeaderSimpleText = dynamic(() => import('./Templates/HeaderSimpleText'), { ssr: true });
-const HeaderKnowledgeArticle = dynamic(() => import('./Templates/HeaderKnowledgeArticle'), { ssr: true });
-const Section100 = dynamic(() => import('./Templates/Section100'), { ssr: true });
-const Section50x50 = dynamic(() => import('./Templates/Section50x50'), { ssr: true });
-const Section33x33x33 = dynamic(() => import('./Templates/Section33x33x33'), { ssr: true });
-const Section25x25x25x25 = dynamic(() => import('./Templates/Section25x25x25x25'), { ssr: true });
-const Section50x50Image = dynamic(() => import('./Templates/Section50x50Image'), { ssr: true });
-const SectionBigImage = dynamic(() => import('./Templates/SectionBigImage'), { ssr: true });
-const SectionHeadingAndText = dynamic(() => import('./Templates/SectionHeadingAndText'), { ssr: true });
-const SectionLogoTicker = dynamic(() => import('./Templates/SectionLogoTicker'), { ssr: true });
-const Section50x50ServicesIntro = dynamic(() => import('./Templates/Section50x50ServicesIntro'), { ssr: true });
-const SectionTextAndDoubleImage = dynamic(() => import('./Templates/SectionTextAndDoubleImage'), { ssr: true });
-const SectionFeaturedCaseStudy = dynamic(() => import('./Templates/SectionFeaturedCaseStudy'), { ssr: true });
-const SectionPanningText = dynamic(() => import('./Templates/SectionPanningText'), { ssr: true });
-const SectionTextWithCta = dynamic(() => import('./Templates/SectionTextWithCta'), { ssr: true });
-const SectionVideoCta = dynamic(() => import('./Templates/SectionVideoCta'), { ssr: true });
-const SectionCaseStudyPortraitAndText = dynamic(() => import('./Templates/SectionCaseStudyPortraitAndText'), { ssr: true });
-const SectionCaseStudyLandscapeAndText = dynamic(() => import('./Templates/SectionCaseStudyLandscapeAndText'), { ssr: true });
-const SectionCaseStudyEdgeImageAndText = dynamic(() => import('./Templates/SectionCaseStudyEdgeImageAndText'), { ssr: true });
-const SectionCaseStudyLargeImage = dynamic(() => import('./Templates/SectionCaseStudyLargeImage'), { ssr: true });
-const SectionCaseStudyTripleImage = dynamic(() => import('./Templates/SectionCaseStudyTripleImage'), { ssr: true });
-const SectionCaseStudyDoubleImage = dynamic(() => import('./Templates/SectionCaseStudyDoubleImage'), { ssr: true });
-const SectionCaseStudyTestimonial = dynamic(() => import('./Templates/SectionCaseStudyTestimonial'), { ssr: true });
-const SectionFeaturedCaseStudies = dynamic(() => import('./Templates/SectionFeaturedCaseStudies'), { ssr: true });
-const SectionCaseStudyTwoImages = dynamic(() => import('./Templates/SectionCaseStudyTwoImages'), { ssr: true });
-const SectionCaseStudyImagesSelection = dynamic(() => import('./Templates/SectionCaseStudyImagesSelection'), { ssr: true });
-const SectionCaseStudyBeforeAndAfter = dynamic(() => import('./Templates/SectionCaseStudyBeforeAndAfter'), { ssr: true });
-const SectionLatestKnowledge = dynamic(() => import('./Templates/SectionLatestKnowledge'), { ssr: true });
-const SectionPreFooter = dynamic(() => import('./Templates/SectionPreFooter'), { ssr: true });
-const SectionKnowledgeText = dynamic(() => import('./Templates/SectionKnowledgeText'), { ssr: true });
-const HeaderKnowledgeDownload = dynamic(() => import('./Templates/HeaderKnowledgeDownload'), { ssr: true });
-const SectionKnowledgeFaq = dynamic(() => import('./Templates/SectionKnowledgeFaq'), { ssr: true });
-const SectionKnowledgeTable = dynamic(() => import('./Templates/SectionKnowledgeTable'), { ssr: true });
-const SectionKnowledgeImage = dynamic(() => import('./Templates/SectionKnowledgeImage'), { ssr: true });
-const SectionKnowledgeVideo = dynamic(() => import('./Templates/SectionKnowledgeVideo'), { ssr: true });
-const SectionKnowledgeMap = dynamic(() => import('./Templates/SectionKnowledgeMap'), { ssr: true });
-const SectionKnowledgeStandoutCta = dynamic(() => import('./Templates/SectionKnowledgeStandoutCta'), { ssr: true });
-const SectionKnowledgePanningTextCta = dynamic(() => import('./Templates/SectionKnowledgePanningTextCta'), { ssr: true });
-const SectionFaq = dynamic(() => import('./Templates/SectionFaq'), { ssr: true });
-const SectionStandoutCta = dynamic(() => import('./Templates/SectionStandoutCta'), { ssr: true });
-const SectionStandoutTestimonial = dynamic(() => import('./Templates/SectionStandoutTestimonial'), { ssr: true });
-const SectionStory = dynamic(() => import('./Templates/SectionStory'), { ssr: true });
-const SectionTeamListing = dynamic(() => import('./Templates/SectionTeamListing'), { ssr: true });
-const SectionStandoutFeaturedContent = dynamic(() => import('./Templates/SectionStandoutFeaturedContent'), { ssr: true });
-const SectionLocationAndMap = dynamic(() => import('./Templates/SectionLocationAndMap'), { ssr: true });
-const HeaderContact = dynamic(() => import('./Templates/HeaderContact'), { ssr: true });
-const HeaderWithForm = dynamic(() => import('./Templates/HeaderWithForm'), { ssr: true });
-const Section50x50Form = dynamic(() => import('./Templates/Section50x50Form'), { ssr: true });
-const SectionCenteredForm = dynamic(() => import('./Templates/SectionCenteredForm'), { ssr: true });
-const SectionProcess = dynamic(() => import('./Templates/SectionProcess'), { ssr: true });
-const SectionLogoGrid = dynamic(() => import('./Templates/SectionLogoGrid'), { ssr: true });
-const SectionKnowledgeIframe = dynamic(() => import('./Templates/SectionKnowledgeIframe'), { ssr: true });
-const SectionCaseStudyIframe = dynamic(() => import('./Templates/SectionCaseStudyIframe'), { ssr: true });
+import Section100 from './Templates/Section100';
+import Section50x50 from './Templates/Section50x50';
+import Section33x33x33 from './Templates/Section33x33x33';
+import Section25x25x25x25 from './Templates/Section25x25x25x25';
+import Section50x50Image from './Templates/Section50x50Image';
+import SectionBigImage from './Templates/SectionBigImage';
+import SectionHeadingAndText from './Templates/SectionHeadingAndText';
+import SectionLogoTicker from './Templates/SectionLogoTicker';
+import Section50x50ServicesIntro from './Templates/Section50x50ServicesIntro';
+import SectionTextAndDoubleImage from './Templates/SectionTextAndDoubleImage';
+import SectionFeaturedCaseStudy from './Templates/SectionFeaturedCaseStudy';
+import SectionPanningText from './Templates/SectionPanningText';
+import SectionTextWithCta from './Templates/SectionTextWithCta';
+import SectionVideoCta from './Templates/SectionVideoCta';
+import SectionCaseStudyPortraitAndText from './Templates/SectionCaseStudyPortraitAndText';
+import SectionCaseStudyLandscapeAndText from './Templates/SectionCaseStudyLandscapeAndText';
+import SectionCaseStudyEdgeImageAndText from './Templates/SectionCaseStudyEdgeImageAndText';
+import SectionCaseStudyLargeImage from './Templates/SectionCaseStudyLargeImage';
+import SectionCaseStudyTripleImage from './Templates/SectionCaseStudyTripleImage';
+import SectionCaseStudyDoubleImage from './Templates/SectionCaseStudyDoubleImage';
+import SectionCaseStudyTestimonial from './Templates/SectionCaseStudyTestimonial';
+import SectionFeaturedCaseStudies from './Templates/SectionFeaturedCaseStudies';
+import SectionCaseStudyTwoImages from './Templates/SectionCaseStudyTwoImages';
+import SectionCaseStudyImagesSelection from './Templates/SectionCaseStudyImagesSelection';
+import SectionCaseStudyBeforeAndAfter from './Templates/SectionCaseStudyBeforeAndAfter';
+import SectionLatestKnowledge from './Templates/SectionLatestKnowledge';
+import SectionPreFooter from './Templates/SectionPreFooter';
+import SectionKnowledgeText from './Templates/SectionKnowledgeText';
+import HeaderKnowledgeDownload from './Templates/HeaderKnowledgeDownload';
+import SectionKnowledgeFaq from './Templates/SectionKnowledgeFaq';
+import SectionKnowledgeTable from './Templates/SectionKnowledgeTable';
+import SectionKnowledgeImage from './Templates/SectionKnowledgeImage';
+import SectionKnowledgeVideo from './Templates/SectionKnowledgeVideo';
+import SectionKnowledgeMap from './Templates/SectionKnowledgeMap';
+import SectionKnowledgeStandoutCta from './Templates/SectionKnowledgeStandoutCta';
+import SectionKnowledgePanningTextCta from './Templates/SectionKnowledgePanningTextCta';
+import SectionFaq from './Templates/SectionFaq';
+import SectionStandoutCta from './Templates/SectionStandoutCta';
+import SectionStandoutTestimonial from './Templates/SectionStandoutTestimonial';
+import SectionStory from './Templates/SectionStory';
+import SectionTeamListing from './Templates/SectionTeamListing';
+import SectionStandoutFeaturedContent from './Templates/SectionStandoutFeaturedContent';
+import SectionLocationAndMap from './Templates/SectionLocationAndMap';
+import HeaderContact from './Templates/HeaderContact';
+import HeaderWithForm from './Templates/HeaderWithForm';
+import Section50x50Form from './Templates/Section50x50Form';
+import SectionCenteredForm from './Templates/SectionCenteredForm';
+import SectionProcess from './Templates/SectionProcess';
+import SectionLogoGrid from './Templates/SectionLogoGrid';
+import SectionKnowledgeIframe from './Templates/SectionKnowledgeIframe';
+import SectionCaseStudyIframe from './Templates/SectionCaseStudyIframe';
 
 interface ContentTemplateComponent {
   _type: string;
@@ -118,12 +78,8 @@ interface Props {
   details?: ContentDetails;
 }
 
-// ComponentType<any>, not FC<ContentTemplateComponent>: next/dynamic erases the
-// loaded component's props to ComponentType<{}>. Both call sites below already
-// read out of these maps through an `any`, so nothing is lost by widening here
-// and it avoids 54 individual casts.
 type ContentTemplates = {
-  [key: string]: React.ComponentType<any>;
+  [key: string]: React.FC<ContentTemplateComponent>;
 };
 
 const headerTemplates: ContentTemplates = {

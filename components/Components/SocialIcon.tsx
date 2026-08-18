@@ -1,4 +1,4 @@
-import Link from '@/components/Components/Link';
+import Link from 'next/link';
 import { ReactNode } from 'react';
 import styles from '@/styles/components/social-icon.module.scss';
 

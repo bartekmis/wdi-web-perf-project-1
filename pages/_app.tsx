@@ -1,5 +1,6 @@
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
+import { useEffect } from 'react';
 import localFont from 'next/font/local';
 
 import '@/styles/globals.scss';
@@ -30,26 +31,6 @@ import CurtainsContextProvider from '@/contexts/curtains';
 // Cost removed: 57,632 B of woff2 (19,756 + 18,488 + 19,388) fetched at
 // ~882-894ms, competing with the critical CSS for the same connections.
 // Cleanup, not a measured win - not isolated in the A/B.
-//
-// 2026-08-17 - WHICH FACES GET PRELOADED, AND WHY IT IS STILL ALL THREE.
-// next/font preloads every face declared in one localFont() call (`preload`
-// defaults to true, `display` to swap), so the question "preload only the
-// critical ones" is really "which faces render above the fold".
-// Measured on the live page, mobile 412x823x1.75, walking every text node
-// intersecting the first viewport and reading its computed font-weight (the
-// CookieYes overlay excluded, since it is moving into GTM):
-//     400  x10  nav items - "Team", "Office Furniture Overview"
-//     500  x8   nav + every .headline-* class (@apply font-medium)
-//     700  x2   buttons - "Contact", "Book a consultation"
-// All three are above the fold, so all three stay preloaded. Dropping one
-// would trade ~18KB of same-origin woff2 (one HTTP/2 stream on a connection
-// the document has already opened) for a visible FOUT on above-fold text,
-// because `display: swap` would then paint that text in Trebuchet/Arial first.
-// The faces that WERE waste are already gone: the four italics above, and the
-// two Roboto Slab woff2 that fonts.gstatic.com served for a family this design
-// never used (see _document.tsx). assets/fonts/ still holds SemiBold and the
-// italics on disk - next/font only emits what is declared here, so they cost
-// nothing. Do not declare a face without checking it renders somewhere.
 const fontArchivo = localFont({
   src: [
     {
@@ -79,12 +60,16 @@ export const App = ({
   useAnimationOnScroll();
   useHashLinkScroll();
 
-  // REMOVED 2026-08-17: a `while (performance.now() - started < 300) {}` busy
-  // loop that ran on mount. It was a deliberate 300ms block of the main thread
-  // during hydration - i.e. squarely inside the window that holds the first
-  // paint and feeds Total Blocking Time. Nothing depended on `acc`; the
-  // `if (acc < 0) console.log(acc)` guard existed only to stop the optimiser
-  // eliminating the loop. It is a demo artefact, not application code.
+  useEffect(() => {
+    const started = performance.now();
+    let acc = 0;
+    while (performance.now() - started < 300) {
+      acc += Math.sqrt(acc + 1);
+    }
+    if (acc < 0) {
+      console.log(acc);
+    }
+  }, []);
 
   return (
     <>

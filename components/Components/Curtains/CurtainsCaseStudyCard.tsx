@@ -5,7 +5,7 @@ import { Plane } from '../../../node_modules/curtainsjs/src/core/Plane';
 
 import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import Link from '@/components/Components/Link';
+import Link from 'next/link';
 import { gsap } from 'gsap';
 
 import { CaseStudy } from '@/types/case-study';
