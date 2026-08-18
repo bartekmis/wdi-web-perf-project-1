@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import Link from 'next/link';
+import { useInView } from 'react-intersection-observer';
 
 import {
   getSectionSettings,
@@ -30,6 +31,20 @@ const SectionTextAndDoubleImage = ({ data }: { data: any }) => {
   const parentRef = useRef<HTMLElement>(null);
   const circleRef = useRef<HTMLDivElement>(null);
   const dotsRef = useRef<HTMLDivElement>(null);
+
+  // Dwa zdjecia tej sekcji sa `loading="lazy"`, ale to nie wystarcza: przy
+  // wolnym laczu Chrome trzyma prog lazy-loadingu na ~3000 px od viewportu,
+  // wiec i tak pobieral je od razu. W pomiarze Lighthouse ruszaly o 850-851 ms,
+  // czyli 75 ms po obrazku LCP, i lacznie 65,9 KB szlo rownolegle z nim -
+  // 19% wszystkich bajtow w oknie LCP.
+  // `useInView` z zapasem 200 px odklada je do momentu, gdy sekcja naprawde
+  // zbliza sie do ekranu. Ramki `figure` maja staly stosunek bokow
+  // (`pb-[55%]` / `pb-[45%]`), a zdjecia i tak sa w nich pozycjonowane
+  // absolutnie, wiec pusta ramka trzyma layout i nic sie nie przesuwa (CLS 0).
+  const { ref: imagesRef, inView: imagesInView } = useInView({
+    rootMargin: '200px',
+    triggerOnce: true,
+  });
 
   // Odsloniecie dekoracji (scale 0 -> 1, opacity 0 -> 1) zeszlo z gsap-a na
   // wlasne klasy `animation-expandIn` / `animation-fadeIn`, ktore i tak sa juz
@@ -117,20 +132,24 @@ const SectionTextAndDoubleImage = ({ data }: { data: any }) => {
             </div>
           </div>
 
-          <div className='relative'>
+          <div className='relative' ref={imagesRef}>
             <figure className='relative w-[80%] pb-[55%] ml-auto z-[1] xl:w-[93%] xl:pb-[62%] animation-revealFromCircle'>
-              <ContentImage
-                className='absolute w-full h-full object-cover'
-                id={data.image_primary}
-                sizes="(max-width: 1999px) 80vw, 40vw"
-              />
+              {imagesInView && (
+                <ContentImage
+                  className='absolute w-full h-full object-cover'
+                  id={data.image_primary}
+                  sizes="(max-width: 1999px) 80vw, 40vw"
+                />
+              )}
             </figure>
             <figure className='relative -mt-[10%] w-[70%] pb-[45%] xl:w-[78%] xl:pb-[52%] xl:-ml-[48px] animation-revealFromCircle'>
-              <ContentImage
-                className='absolute w-full h-full object-cover '
-                id={data.image_secondary}
-                sizes="(max-width: 1999px) 80vw, 40vw"
-              />
+              {imagesInView && (
+                <ContentImage
+                  className='absolute w-full h-full object-cover '
+                  id={data.image_secondary}
+                  sizes="(max-width: 1999px) 80vw, 40vw"
+                />
+              )}
             </figure>
 
             <Decoration
