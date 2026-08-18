@@ -99,8 +99,14 @@ const ContentImage = forwardRef(function ContentImage(
           alt={item.altText}
           width={item.mediaDetails.width}
           height={item.mediaDetails.height}
-          priority={false}
-          loading="lazy"
+          // `priority` było tu zahardkodowane na false + loading="lazy", więc
+          // prop przekazywany przez komponenty (np. obrazek bohatera w
+          // HeaderImageSplit) nie robił nic. Efekt: element LCP był lazy-loaded
+          // i bez fetchpriority - przeglądarka zaczynała go pobierać dopiero
+          // 504 ms po starcie nawigacji. Bez `loading` next/image i tak
+          // domyślnie daje lazy, a przy priority=true ustawia eager
+          // + fetchpriority="high".
+          priority={!!priority}
           id={elementId || ''}
           data-sampler={dataSampler || ''}
           sizes={sizes || ''}
@@ -116,8 +122,7 @@ const ContentImage = forwardRef(function ContentImage(
           alt={item.altText}
           width={item.mediaDetails.width}
           height={item.mediaDetails.height}
-          priority={false}
-          loading="lazy"
+          priority={!!priority}
           id={elementId || ''}
           data-sampler={elementId || ''}
           sizes={sizes || ''}

@@ -118,6 +118,33 @@ export const fetchAPI = async (
   );
 };
 
+// getMediaItems zwraca CAŁĄ bibliotekę mediów WordPressa (1705 pozycji,
+// ~460 kB JSON). Trafiała w całości do __NEXT_DATA__ na każdej stronie, choć
+// pojedyncza strona odwołuje się do kilkudziesięciu obrazów - na homepage 63.
+// To było 460 kB z 518 kB dokumentu (89%): bajty do pobrania, do sparsowania
+// przez parser HTML i jeszcze raz jako JSON przy hydracji.
+//
+// ContentImage znajduje obrazek po `databaseId`, a wszystkie identyfikatory
+// pochodzą z pozostałych propsów (content strony, partials, listingi...).
+// Serializujemy więc te propsy i zostawiamy tylko te pozycje, których
+// databaseId faktycznie się w nich pojawia. Filtr jest celowo nadmiarowy
+// (liczba może przypadkiem pasować do czegoś innego) - lepiej dowieźć kilka
+// zbędnych pozycji niż zgubić obrazek, który strona renderuje.
+const pickReferencedMediaItems = (
+  mediaItems: any,
+  props: Record<string, unknown>
+) => {
+  if (!Array.isArray(mediaItems)) {
+    return mediaItems;
+  }
+
+  const referenced = new Set(JSON.stringify(props).match(/\d+/g) || []);
+
+  return mediaItems.filter((item) =>
+    referenced.has(String(item?.databaseId))
+  );
+};
+
 export const withGlobalData =
   (getStaticProps: any) =>
   async (...props: any) => {
@@ -145,17 +172,23 @@ export const withGlobalData =
 
     const staticProps = result?.props || {};
 
+    // mediaItems zostawiamy na końcu - filtrujemy je względem wszystkich
+    // pozostałych propsów, które trafiają na stronę.
+    const propsWithoutMedia = {
+      ...staticProps,
+      menus,
+      forms,
+      caseStudies,
+      knowledgeArticles,
+      faqs,
+      partials,
+    };
+
     return {
       ...result,
       props: {
-        ...staticProps,
-        menus,
-        mediaItems,
-        forms,
-        caseStudies,
-        knowledgeArticles,
-        faqs,
-        partials,
+        ...propsWithoutMedia,
+        mediaItems: pickReferencedMediaItems(mediaItems, propsWithoutMedia),
       },
     };
   };

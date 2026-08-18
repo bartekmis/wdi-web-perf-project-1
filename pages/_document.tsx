@@ -6,11 +6,16 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        {/* CookieYes consent management - load first (sync by design) */}
-        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
+        {/* CookieYes consent management.
+            Był to zwykły <script src> w <head>, czyli parser-blocking: 221 ms,
+            w których nie renderowało się nic. `defer` zdejmuje go ze ścieżki
+            krytycznej, a jednocześnie - w odróżnieniu od `async` - zachowuje
+            kolejność wykonania względem innych deferred skryptów i odpala go
+            przed DOMContentLoaded. */}
         <script
           id="cookieyes"
           type="text/javascript"
+          defer
           src="https://cdn-cookieyes.com/client_data/92a68bd2b7ccd68375efe4a3592b2d33/script.js"
         ></script>
         <meta name="robots" content="noindex, nofollow"></meta>
@@ -54,9 +59,13 @@ export default function Document() {
             pulling recaptcha__en.js (382,189 B / 513ms CPU, per WPT) and one
             extra cold origin (www.gstatic.com).
             If a page ever needs reCAPTCHA, load it on that page, on demand. */}
+        {/* Roboto Slab jest fontem `body`. Przy `display=block` przeglądarka
+            trzyma tekst NIEWIDOCZNY (FOIT) do czasu pobrania pliku - Lighthouse
+            wyceniał to na 555 ms FCP. `swap` maluje od razu fallbackiem
+            i podmienia font po pobraniu. */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;700&display=block"
+          href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;700&display=swap"
         />
         {/* DebugBear RUM - load early so it captures errors from the start */}
         <script
@@ -64,6 +73,8 @@ export default function Document() {
             __html: `(function(){var dbpr=100;if(Math.random()*100>100-dbpr){var d="dbbRum",w=window,o=document,a=addEventListener,scr=o.createElement("script");scr.async=!0;w[d]=w[d]||[];w[d].push(["presampling",dbpr]);["error","unhandledrejection"].forEach(function(t){a(t,function(e){w[d].push([t,e])});});scr.src="https://cdn.debugbear.com/OsowRdI4ZOnc.js";o.head.appendChild(scr);}})()`,
           }}
         />
+        {/* GTM. `j.async=false` sprawiał, że gtm.js (286 kB) był pobierany
+            i wykonywany synchronicznie, blokując parser. */}
         {gtmId && (
           <>
             <script
@@ -71,7 +82,7 @@ export default function Document() {
                 __html: `
                     (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
                     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-                    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=false;j.src=
+                    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
                     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
                     })(window,document,'script','dataLayer','${gtmId}');
                   `,
