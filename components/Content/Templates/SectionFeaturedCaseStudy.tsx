@@ -21,6 +21,14 @@ import Testimonial from '@/components/Components/Testimonial';
 import DecorationLine from '@/components/Components/DecorationLine';
 import Headline from '@/components/Components/Headline';
 
+// dynamic() musi stać w module, nie w ciele komponentu. Wywołane przy każdym
+// renderze tworzy ZA KAŻDYM RAZEM nowy typ komponentu, więc React nie widzi
+// tego samego drzewa - odmontowuje stare i montuje nowe, kasując DOM i stan,
+// a slider (Swiper) inicjalizuje się od zera po każdym renderze rodzica.
+const DynamicFeaturedCaseStudy = dynamic(
+  () => import('../../Components/Curtains/CurtainsFeaturedCaseStudy')
+);
+
 const SectionFeaturedCaseStudy = ({ data }: { data: any }) => {
   const [caseStudy, setCaseStudy] = useState<CaseStudy>();
 
@@ -41,10 +49,6 @@ const SectionFeaturedCaseStudy = ({ data }: { data: any }) => {
     threshold: 0,
     triggerOnce: true,
   });
-
-  const DynamicFeaturedCaseStudy = dynamic(
-    () => import('../../Components/Curtains/CurtainsFeaturedCaseStudy')
-  );
 
   useEffect(() => {
     const handleCaseStudies = () => {

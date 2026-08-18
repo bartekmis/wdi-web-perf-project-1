@@ -14,6 +14,14 @@ import Decoration from '@/components/Components/Decoration';
 import DecorationLine from '@/components/Components/DecorationLine';
 import Headline from '@/components/Components/Headline';
 
+// dynamic() musi stać w module, nie w ciele komponentu. Wywołane przy każdym
+// renderze tworzy ZA KAŻDYM RAZEM nowy typ komponentu, więc React nie widzi
+// tego samego drzewa - odmontowuje stare i montuje nowe, kasując DOM i stan,
+// a slider (Swiper) inicjalizuje się od zera po każdym renderze rodzica.
+const DynamicCurtainsServicesCard = dynamic(
+  () => import('../../Components/Curtains/CurtainsServicesCard')
+);
+
 const Section50x50ServicesIntro = ({ data }: { data: any }) => {
   const sectionSettings: SectionSettings = {
     bgColour: data.section_background_colour,
@@ -28,10 +36,6 @@ const Section50x50ServicesIntro = ({ data }: { data: any }) => {
     threshold: 0.5,
     triggerOnce: true,
   });
-
-  const DynamicCurtainsServicesCard = dynamic(
-    () => import('../../Components/Curtains/CurtainsServicesCard')
-  );
 
   return (
     <section

@@ -15,6 +15,14 @@ import { KnowledgeContext } from '@/contexts/knowledge';
 import { useInView } from 'react-intersection-observer';
 import Headline from '@/components/Components/Headline';
 
+// dynamic() musi stać w module, nie w ciele komponentu. Wywołane przy każdym
+// renderze tworzy ZA KAŻDYM RAZEM nowy typ komponentu, więc React nie widzi
+// tego samego drzewa - odmontowuje stare i montuje nowe, kasując DOM i stan,
+// a slider (Swiper) inicjalizuje się od zera po każdym renderze rodzica.
+const CardsSlider = dynamic(
+  () => import('../../Components/Swiper/CardsSlider')
+);
+
 const SectionLatestKnowledge = ({ data }: { data: any }) => {
   const router = useRouter();
   const [articles, setArticles] = useState<KnowledgeArticle[]>([]);
@@ -33,10 +41,6 @@ const SectionLatestKnowledge = ({ data }: { data: any }) => {
   ) as KnowledgeArticle[];
   const overridenKnowledgeArticles =
     data.knowledge_articles_overriden as KnowledgeAssociation[];
-
-  const CardsSlider = dynamic(
-    () => import('../../Components/Swiper/CardsSlider')
-  );
 
   const { ref, inView } = useInView({
     threshold: 0,

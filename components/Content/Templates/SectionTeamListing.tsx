@@ -5,6 +5,14 @@ import dynamic from 'next/dynamic';
 import { MdChevronLeft, MdChevronRight } from 'react-icons/md';
 import { useInView } from 'react-intersection-observer';
 
+// dynamic() musi stać w module, nie w ciele komponentu. Wywołane przy każdym
+// renderze tworzy ZA KAŻDYM RAZEM nowy typ komponentu, więc React nie widzi
+// tego samego drzewa - odmontowuje stare i montuje nowe, kasując DOM i stan,
+// a slider (Swiper) inicjalizuje się od zera po każdym renderze rodzica.
+const TeamListingSlider = dynamic(
+  () => import('../../Components/Swiper/TeamListingSlider')
+);
+
 const SectionTeamListing = ({ data }: { data: any }) => {
   const sectionSettings: SectionSettings = {
     bgColour: data.section_background_colour,
@@ -14,10 +22,6 @@ const SectionTeamListing = ({ data }: { data: any }) => {
     fontSize: data.section_font_size,
     textAlignment: data.section_text_alignment,
   };
-
-  const TeamListingSlider = dynamic(
-    () => import('../../Components/Swiper/TeamListingSlider')
-  );
 
   const { ref, inView } = useInView({
     threshold: 0,

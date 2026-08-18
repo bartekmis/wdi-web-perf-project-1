@@ -9,6 +9,14 @@ import {
 import { SectionSettings } from '@/types/theme';
 import Headline from '@/components/Components/Headline';
 
+// dynamic() musi stać w module, nie w ciele komponentu. Wywołane przy każdym
+// renderze tworzy ZA KAŻDYM RAZEM nowy typ komponentu, więc React nie widzi
+// tego samego drzewa - odmontowuje stare i montuje nowe, kasując DOM i stan,
+// a slider (Swiper) inicjalizuje się od zera po każdym renderze rodzica.
+const ProcessSlider = dynamic(
+  () => import('../../Components/Swiper/ProcessSlider')
+);
+
 const SectionProcess = ({ data }: { data: any }) => {
   const sectionSettings: SectionSettings = {
     bgColour: data.section_background_colour,
@@ -23,10 +31,6 @@ const SectionProcess = ({ data }: { data: any }) => {
     threshold: 0,
     triggerOnce: true,
   });
-
-  const ProcessSlider = dynamic(
-    () => import('../../Components/Swiper/ProcessSlider')
-  );
 
   return (
     <section
