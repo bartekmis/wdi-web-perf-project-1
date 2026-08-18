@@ -1,6 +1,6 @@
 import { useInView } from 'react-intersection-observer';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
+import Link from '@/components/Components/Link';
 
 import {
   getSectionSettings,

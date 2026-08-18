@@ -1,5 +1,5 @@
 import { KnowledgeArticle } from '@/types/knowledge';
-import Link from 'next/link';
+import Link from '@/components/Components/Link';
 import ContentImage from './ContentImage';
 import CategoryTag from './CategoryTag';
 import { useContext } from 'react';

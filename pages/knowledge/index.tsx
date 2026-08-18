@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { GetStaticProps } from 'next';
-import Link from 'next/link';
+import Link from '@/components/Components/Link';
 import Head from 'next/head';
 import { getFullHead } from '@/lib/helper-utils';
 import ContentImage from '@/components/Components/ContentImage';

@@ -9,7 +9,7 @@ import {
   getSectionSettings,
 } from '@/lib/theme-utils';
 import { SectionSettings } from '@/types/theme';
-import Link from 'next/link';
+import Link from '@/components/Components/Link';
 
 const SectionHeadingAndText = ({ data }: { data: any }) => {
   const sectionSettings: SectionSettings = {

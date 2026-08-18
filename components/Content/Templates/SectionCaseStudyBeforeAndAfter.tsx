@@ -11,7 +11,7 @@ import { useRef } from 'react';
 import { FaPlay } from 'react-icons/fa';
 import styles from '@/styles/sections/section-case-study-before-and-after.module.scss';
 import Button from '@/components/Components/Button';
-import Link from 'next/link';
+import Link from '@/components/Components/Link';
 import Headline from '@/components/Components/Headline';
 
 const SectionCaseStudyBeforeAndAfter = ({ data }: { data: any }) => {

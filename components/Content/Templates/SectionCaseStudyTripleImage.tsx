@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/Components/Link';
 import { ReactNode } from 'react';
 
 import ContentImage from '@/components/Components/ContentImage';

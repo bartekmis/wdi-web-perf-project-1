@@ -1,13 +1,27 @@
 import { ReactNode } from 'react';
 import { Autoplay } from 'swiper';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import Link from 'next/link';
+import Link from '@/components/Components/Link';
 import 'swiper/scss';
 import 'swiper/scss/autoplay';
 
 import { CaseStudy } from '@/types/case-study';
 import ContentImage from '../ContentImage';
 import { ConditionalWrapper } from '@/lib/helper-utils';
+
+/**
+ * Without a `sizes`, next/image treats these as fixed-size images and builds the
+ * srcset from the LOGO'S OWN intrinsic width and 2x that - which for the source
+ * files here resolves past every entry in `imageSizes` and lands on
+ * deviceSizes[0] = 640. Measured in-browser at 412x823x1.75: each logo renders
+ * into a 105px box and every one of them was fetching `w=640`.
+ *
+ * The ticker shows 3 slides below 768px, 4 up to 1200px and 6 above, so a slide
+ * is roughly a third / a quarter / a sixth of the viewport. Declaring that lets
+ * the browser pick from the full srcset: at 412px wide and DPR 1.75 it now needs
+ * 33vw * 1.75 = 238 device px and selects w=240 instead of w=640.
+ */
+const LOGO_SIZES = '(max-width: 767px) 33vw, (max-width: 1199px) 25vw, 17vw';
 
 const LogoTickerSlider = ({
   caseStudies,
@@ -53,6 +67,7 @@ const LogoTickerSlider = ({
                   id={caseStudy.lead.logo.id}
                   width={+caseStudy.lead.logo.width}
                   height={+caseStudy.lead.logo.height}
+                  sizes={LOGO_SIZES}
                 />
               </Link>
             </SwiperSlide>
@@ -79,6 +94,7 @@ const LogoTickerSlider = ({
                   id={logo.image}
                   width={logo.image_width}
                   height={logo.image_height}
+                  sizes={LOGO_SIZES}
                 />
               </ConditionalWrapper>
             </SwiperSlide>
