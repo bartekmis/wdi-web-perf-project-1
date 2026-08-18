@@ -12,16 +12,25 @@ const nextConfig = {
   output: 'standalone',
   experimental: {
     largePageDataBytes: 2048 * 1000,
-    // ZMIANA 2026-08-18: wbudowywanie krytycznego CSS-a (critters).
-    // FCP siedzi dokladnie na arkuszu: 5 blokujacych renderowanie plikow CSS
-    // (razem 23,2 KB) startuje o ~740 ms, najwiekszy konczy sie o 2342 ms,
-    // a FCP wypada o 2411 ms. Same pliki nie sa duze - one po prostu dziela
-    // pasmo z obrazkiem LCP, fontem i ~180 KB JS-a, ktore rusza w tej samej
-    // milisekundzie.
-    // `optimizeCss` wstrzykuje reguly potrzebne dla pierwszego ekranu prosto
-    // w HTML, a reszte arkuszy przelacza na ladowanie nieblokujace - dzieki
-    // czemu pierwsze malowanie przestaje czekac na osobny request.
-    optimizeCss: true,
+    // COFNIETE 2026-08-18: `optimizeCss: true` (critters). NIE WLACZAC PONOWNIE
+    // bez sprawdzenia CLS na szybkim laczu.
+    //
+    // Wbudowywanie krytycznego CSS-a faktycznie robilo to, co obiecuje: przy
+    // symulowanym Slow 4G FCP spadlo z 2411 ms do 865 ms, a Speed Index
+    // z 3037 ms do 1790 ms. Problem w tym, ze critters wybiera "krytyczne"
+    // reguly, dopasowujac selektory do wyrenderowanego HTML-a, i czesc regul
+    // gubi - reszta arkusza doladowuje sie potem nieblokujaco
+    // (media="print" onload="this.media='all'"), a wtedy layout skacze.
+    //
+    // Zmierzone na zywej stronie (PerformanceObserver, layout-shift, cold cache,
+    // Moto G Power / Fast 4G): przesuniecie 0,0687 w 211 ms, zrodlo to przycisk
+    // "Book a consultation" rosnacy z 24 px na 64 px - czyli padding
+    // z button.module.scss dojechal dopiero z asynchronicznym arkuszem.
+    // Lighthouse przy Fast 4G raportowal z tego CLS 0,305 (przy Slow 4G 0,
+    // bo tam arkusz zdazy przed pierwszym malowaniem i skok sie nie ujawnia).
+    //
+    // CLS wazy 25% wyniku, FCP i SI po 10%, a na szybkim laczu FCP i tak jest
+    // niskie bez tej sztuczki - wiec bilans wychodzi wyraznie na minus.
   },
   staticPageGenerationTimeout: 7200,
   reactStrictMode: true,
