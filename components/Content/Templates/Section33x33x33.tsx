@@ -9,7 +9,7 @@ import {
   getSectionSettings,
 } from '@/lib/theme-utils';
 import { SectionSettings } from '@/types/theme';
-import Link from '@/components/Components/Link';
+import Link from 'next/link';
 
 const Section33x33x33 = ({ data }: { data: any }) => {
   const sectionSettings: SectionSettings = {

@@ -1,6 +1,6 @@
 import { useState, ChangeEvent } from 'react';
 import { GetStaticProps } from 'next';
-import Link from '@/components/Components/Link';
+import Link from 'next/link';
 import Head from 'next/head';
 import { getFullHead } from '@/lib/helper-utils';
 import { FiSearch } from 'react-icons/fi';

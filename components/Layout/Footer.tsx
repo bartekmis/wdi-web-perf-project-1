@@ -1,5 +1,5 @@
 import { HierarchicalMenu } from '@/types/menu';
-import Link from '@/components/Components/Link';
+import Link from 'next/link';
 
 import styles from '@/styles/layout/footer.module.scss';
 import SocialIcons from '../Components/SocialIcons';

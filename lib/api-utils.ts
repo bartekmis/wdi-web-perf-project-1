@@ -118,52 +118,6 @@ export const fetchAPI = async (
   );
 };
 
-/**
- * Ship only the media items a page can actually render.
- *
- * `getMediaItems` fetches the ENTIRE WordPress media library, and
- * `withGlobalData` used to hand all of it to every page as a prop. Next
- * serialises props into the __NEXT_DATA__ script tag in the HTML, so the
- * homepage document was:
- *
- *     document total          517,744 chars
- *     __NEXT_DATA__           471,133 chars   (91% of the document)
- *     pageProps.mediaItems    460,065 chars   (1705 items)
- *
- * for a page that renders about 14 images. Every visitor downloaded, parsed and
- * re-hydrated ~450KB of JSON describing images that are not on the page - on the
- * critical path, before hydration can finish.
- *
- * ContentImage resolves an image by looking up `databaseId` against an id that
- * came out of these very props (`data.image`, `caseStudy.lead.logo.id`,
- * `logo.image`, ...). So the set of ids a page can possibly ask for is exactly
- * the set of integers appearing anywhere in its serialised props. We collect
- * those and keep only the matching items.
- *
- * Deliberately biased towards keeping too much: any integer anywhere in the
- * props counts as a potential id, so an unrelated number that happens to equal a
- * databaseId merely keeps one extra item. The failure mode that would actually
- * break rendering - dropping an item a page needed - requires an id that is
- * absent from the props, which cannot happen for anything rendered from them.
- *
- * NOTE: /api/global-data (used by CSRWrapper for preview) is intentionally left
- * alone and still returns the full library - it is a runtime fetch on an
- * authenticated preview path, not part of any visitor's critical path.
- */
-const pruneMediaItems = (mediaItems: any, referenceSources: unknown[]) => {
-  if (!Array.isArray(mediaItems) || mediaItems.length === 0) {
-    return mediaItems;
-  }
-
-  const referencedIds = new Set(
-    JSON.stringify(referenceSources).match(/\d+/g) || []
-  );
-
-  return mediaItems.filter((item: any) =>
-    referencedIds.has(String(item?.databaseId))
-  );
-};
-
 export const withGlobalData =
   (getStaticProps: any) =>
   async (...props: any) => {
@@ -196,15 +150,7 @@ export const withGlobalData =
       props: {
         ...staticProps,
         menus,
-        mediaItems: pruneMediaItems(mediaItems, [
-          staticProps,
-          menus,
-          forms,
-          caseStudies,
-          knowledgeArticles,
-          faqs,
-          partials,
-        ]),
+        mediaItems,
         forms,
         caseStudies,
         knowledgeArticles,

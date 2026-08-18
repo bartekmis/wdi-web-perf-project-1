@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import Link from '@/components/Components/Link';
+import Link from 'next/link';
 
 import {
   getSectionSettings,

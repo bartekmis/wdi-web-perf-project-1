@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import Link from '@/components/Components/Link';
+import Link from 'next/link';
 import { gsap } from 'gsap';
 import ScrollTrigger from 'gsap/dist/ScrollTrigger';
 

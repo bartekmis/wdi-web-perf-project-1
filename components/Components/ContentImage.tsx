@@ -27,29 +27,6 @@ const imgixLoader = ({ src, width, quality }: any) => {
   return url.href;
 };
 
-/**
- * FIXED 2026-08-18: this component accepted a `priority` prop, and every caller
- * that renders an above-the-fold image passed it - HeaderImageSplit passes
- * `priority` on the hero - but BOTH return branches hardcoded
- * `priority={false}` and `loading="lazy"`, silently discarding it.
- *
- * The homepage's LCP element is that hero <img>. Lazy-loading it means the
- * browser will not even request it until layout has run, so it is discovered
- * late and downloaded at Low priority behind everything else.
- *
- * The evidence this was the single biggest defect on the page:
- *   lab   - Lighthouse lcp-discovery-insight reported eagerlyLoaded: false and
- *           priorityHinted: false on the LCP image.
- *   field - DebugBear RUM, mobile image-LCP views (n=59, 30 days):
- *           lcpLoadDelay p75 = 1577ms against lcpLoadTime p75 = 474ms. The
- *           browser spent three times longer deciding to start the request than
- *           it spent on the request.
- *
- * Passing `priority` through gives next/image `loading="eager"` +
- * `fetchpriority="high"` + a <link rel=preload> for exactly the images that
- * need it, while every image whose caller does NOT pass it stays lazy, which is
- * what the old hardcoding was presumably trying to achieve.
- */
 const ContentImage = forwardRef(function ContentImage(
   {
     id,
@@ -122,7 +99,8 @@ const ContentImage = forwardRef(function ContentImage(
           alt={item.altText}
           width={item.mediaDetails.width}
           height={item.mediaDetails.height}
-          priority={!!priority}
+          priority={false}
+          loading="lazy"
           id={elementId || ''}
           data-sampler={dataSampler || ''}
           sizes={sizes || ''}
@@ -138,7 +116,8 @@ const ContentImage = forwardRef(function ContentImage(
           alt={item.altText}
           width={item.mediaDetails.width}
           height={item.mediaDetails.height}
-          priority={!!priority}
+          priority={false}
+          loading="lazy"
           id={elementId || ''}
           data-sampler={elementId || ''}
           sizes={sizes || ''}

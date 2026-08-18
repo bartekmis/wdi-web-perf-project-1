@@ -22,13 +22,7 @@ const nextConfig = {
     // The header logo is width={120}; with the old list topping out at 100,
     // both 120 and 240 fell through to deviceSizes[0] and the page requested
     // _next/image?w=640 for a 120x60 slot.
-    // 160 and 320 added 2026-08-18. The case-study logos declare sizes='144px'
-    // and STILL resolved to _next/image?w=640: at the Moto G Power's DPR of
-    // 1.75 the browser needs 144 * 1.75 = 252 device px, and this list used to
-    // jump straight from 240 to deviceSizes[0], which is 640. Fourteen logos
-    // therefore each fetched a 640px-wide file for a 144px slot, on the same
-    // connections the LCP hero was competing for.
-    imageSizes: [20, 33, 40, 50, 60, 80, 90, 100, 120, 160, 240, 320],
+    imageSizes: [20, 33, 40, 50, 60, 80, 90, 100, 120, 240],
     domains: ['k2space-backend.bigpic.dev', 'k2space.local', 'k2space-staging.imgix.net', 'k2space.imgix.net', 'cms.k2space.co.uk'],
   },
   env: {

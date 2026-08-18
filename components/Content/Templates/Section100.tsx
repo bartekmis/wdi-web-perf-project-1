@@ -1,4 +1,4 @@
-import Link from '@/components/Components/Link';
+import Link from 'next/link';
 
 import Button from '@/components/Components/Button';
 import {

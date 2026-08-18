@@ -4,7 +4,7 @@ import VideoPlayer from '@/components/Components/VideoPlayer';
 import { ConditionalWrapper } from '@/lib/helper-utils';
 import { getSectionSettings, getContainerSize } from '@/lib/theme-utils';
 import { SectionSettings } from '@/types/theme';
-import Link from '@/components/Components/Link';
+import Link from 'next/link';
 import { ReactNode } from 'react';
 
 const SectionCaseStudyLargeImage = ({ data }: { data: any }) => {
