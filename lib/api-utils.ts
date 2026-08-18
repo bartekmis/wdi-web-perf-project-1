@@ -118,6 +118,45 @@ export const fetchAPI = async (
   );
 };
 
+type MediaItemShape = { databaseId: number };
+
+// Cała biblioteka mediów WP to ~1700 pozycji (~449 KB JSON). Do wyrenderowania
+// jednej strony potrzeba kilkudziesięciu. Bez tego filtra pełna lista trafia
+// w KAŻDY payload: do `__NEXT_DATA__` w HTML-u ORAZ do każdego pliku
+// `_next/data/<page>.json`, który <Link> prefetchuje w tle - czyli ta sama
+// biblioteka leci po sieci i przez JSON.parse tyle razy, ile linków jest
+// w viewporcie.
+//
+// `ContentImage` szuka pozycji po `databaseId`, a ID pojawiają się w propsach
+// jako gołe liczby (w JSON-ie treści, w menu, w partialsach). Zbieramy więc
+// wszystkie tokeny liczbowe z pozostałych propsów i zostawiamy tylko te media,
+// których ID w nich występuje. Filtr jest celowo NADMIAROWY - dopasuje też
+// przypadkowe liczby (np. rok, szerokość) - bo koszt zostawienia kilku zbędnych
+// pozycji jest znikomy, a koszt zgubienia potrzebnej to brakujący obrazek.
+const pickUsedMediaItems = (
+  mediaItems: MediaItemShape[],
+  otherProps: Record<string, unknown>
+): MediaItemShape[] => {
+  if (!Array.isArray(mediaItems)) {
+    return mediaItems;
+  }
+
+  let serialised = "";
+  try {
+    serialised = JSON.stringify(otherProps);
+  } catch (err) {
+    // Props, których nie da się zserializować, i tak wywrócą Next.js dalej -
+    // tu wolimy oddać pełną listę niż zgubić obrazki.
+    return mediaItems;
+  }
+
+  const referencedIds = new Set(serialised.match(/\d+/g) || []);
+
+  return mediaItems.filter((item) =>
+    referencedIds.has(String(item?.databaseId))
+  );
+};
+
 export const withGlobalData =
   (getStaticProps: any) =>
   async (...props: any) => {
@@ -145,17 +184,24 @@ export const withGlobalData =
 
     const staticProps = result?.props || {};
 
+    const propsWithoutMedia = {
+      ...staticProps,
+      menus,
+      forms,
+      caseStudies,
+      knowledgeArticles,
+      faqs,
+      partials,
+    };
+
     return {
       ...result,
       props: {
-        ...staticProps,
-        menus,
-        mediaItems,
-        forms,
-        caseStudies,
-        knowledgeArticles,
-        faqs,
-        partials,
+        ...propsWithoutMedia,
+        mediaItems: pickUsedMediaItems(
+          mediaItems as MediaItemShape[],
+          propsWithoutMedia
+        ),
       },
     };
   };

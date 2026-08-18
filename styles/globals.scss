@@ -8,7 +8,7 @@
 @import './animate';
 
 body {
-  font-family: 'Roboto Slab', var(--font-archivo), 'Trebuchet MS', Arial, sans-serif;
+  font-family: var(--font-roboto-slab), var(--font-archivo), 'Trebuchet MS', Arial, sans-serif;
 }
 
 img {

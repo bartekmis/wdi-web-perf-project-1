@@ -1,58 +1,69 @@
-import HeaderImageSplit from './Templates/HeaderImageSplit';
-import HeaderSimpleText from './Templates/HeaderSimpleText';
-import HeaderKnowledgeArticle from './Templates/HeaderKnowledgeArticle';
+import dynamic from 'next/dynamic';
 
-import Section100 from './Templates/Section100';
-import Section50x50 from './Templates/Section50x50';
-import Section33x33x33 from './Templates/Section33x33x33';
-import Section25x25x25x25 from './Templates/Section25x25x25x25';
-import Section50x50Image from './Templates/Section50x50Image';
-import SectionBigImage from './Templates/SectionBigImage';
-import SectionHeadingAndText from './Templates/SectionHeadingAndText';
-import SectionLogoTicker from './Templates/SectionLogoTicker';
-import Section50x50ServicesIntro from './Templates/Section50x50ServicesIntro';
-import SectionTextAndDoubleImage from './Templates/SectionTextAndDoubleImage';
-import SectionFeaturedCaseStudy from './Templates/SectionFeaturedCaseStudy';
-import SectionPanningText from './Templates/SectionPanningText';
-import SectionTextWithCta from './Templates/SectionTextWithCta';
-import SectionVideoCta from './Templates/SectionVideoCta';
-import SectionCaseStudyPortraitAndText from './Templates/SectionCaseStudyPortraitAndText';
-import SectionCaseStudyLandscapeAndText from './Templates/SectionCaseStudyLandscapeAndText';
-import SectionCaseStudyEdgeImageAndText from './Templates/SectionCaseStudyEdgeImageAndText';
-import SectionCaseStudyLargeImage from './Templates/SectionCaseStudyLargeImage';
-import SectionCaseStudyTripleImage from './Templates/SectionCaseStudyTripleImage';
-import SectionCaseStudyDoubleImage from './Templates/SectionCaseStudyDoubleImage';
-import SectionCaseStudyTestimonial from './Templates/SectionCaseStudyTestimonial';
-import SectionFeaturedCaseStudies from './Templates/SectionFeaturedCaseStudies';
-import SectionCaseStudyTwoImages from './Templates/SectionCaseStudyTwoImages';
-import SectionCaseStudyImagesSelection from './Templates/SectionCaseStudyImagesSelection';
-import SectionCaseStudyBeforeAndAfter from './Templates/SectionCaseStudyBeforeAndAfter';
-import SectionLatestKnowledge from './Templates/SectionLatestKnowledge';
-import SectionPreFooter from './Templates/SectionPreFooter';
-import SectionKnowledgeText from './Templates/SectionKnowledgeText';
-import HeaderKnowledgeDownload from './Templates/HeaderKnowledgeDownload';
-import SectionKnowledgeFaq from './Templates/SectionKnowledgeFaq';
-import SectionKnowledgeTable from './Templates/SectionKnowledgeTable';
-import SectionKnowledgeImage from './Templates/SectionKnowledgeImage';
-import SectionKnowledgeVideo from './Templates/SectionKnowledgeVideo';
-import SectionKnowledgeMap from './Templates/SectionKnowledgeMap';
-import SectionKnowledgeStandoutCta from './Templates/SectionKnowledgeStandoutCta';
-import SectionKnowledgePanningTextCta from './Templates/SectionKnowledgePanningTextCta';
-import SectionFaq from './Templates/SectionFaq';
-import SectionStandoutCta from './Templates/SectionStandoutCta';
-import SectionStandoutTestimonial from './Templates/SectionStandoutTestimonial';
-import SectionStory from './Templates/SectionStory';
-import SectionTeamListing from './Templates/SectionTeamListing';
-import SectionStandoutFeaturedContent from './Templates/SectionStandoutFeaturedContent';
-import SectionLocationAndMap from './Templates/SectionLocationAndMap';
-import HeaderContact from './Templates/HeaderContact';
-import HeaderWithForm from './Templates/HeaderWithForm';
-import Section50x50Form from './Templates/Section50x50Form';
-import SectionCenteredForm from './Templates/SectionCenteredForm';
-import SectionProcess from './Templates/SectionProcess';
-import SectionLogoGrid from './Templates/SectionLogoGrid';
-import SectionKnowledgeIframe from './Templates/SectionKnowledgeIframe';
-import SectionCaseStudyIframe from './Templates/SectionCaseStudyIframe';
+// ZMIANA 2026-08-18: wszystkie szablony sekcji byly importowane statycznie,
+// wiec bundle KAZDEJ strony zawieral komplet ~60 szablonow razem z ich
+// zaleznosciami - @react-google-maps/api, react-youtube, swiper, curtains,
+// gsap - niezaleznie od tego, co dana strona faktycznie renderuje.
+// Strona glowna uzywa 1 headera i 9 sekcji.
+//
+// `next/dynamic` bez `ssr: false` NIE zmienia HTML-a: sekcje nadal renderuja sie
+// po stronie serwera (wiec obrazek LCP i tresc sa w zrodle), ale kod klienta
+// jedzie w osobnych chunkach i Next dociaga tylko te, ktore sa na stronie.
+
+const HeaderContact = dynamic(() => import('./Templates/HeaderContact'));
+const HeaderImageSplit = dynamic(() => import('./Templates/HeaderImageSplit'));
+const HeaderKnowledgeArticle = dynamic(() => import('./Templates/HeaderKnowledgeArticle'));
+const HeaderKnowledgeDownload = dynamic(() => import('./Templates/HeaderKnowledgeDownload'));
+const HeaderSimpleText = dynamic(() => import('./Templates/HeaderSimpleText'));
+const HeaderWithForm = dynamic(() => import('./Templates/HeaderWithForm'));
+const Section100 = dynamic(() => import('./Templates/Section100'));
+const Section25x25x25x25 = dynamic(() => import('./Templates/Section25x25x25x25'));
+const Section33x33x33 = dynamic(() => import('./Templates/Section33x33x33'));
+const Section50x50 = dynamic(() => import('./Templates/Section50x50'));
+const Section50x50Form = dynamic(() => import('./Templates/Section50x50Form'));
+const Section50x50Image = dynamic(() => import('./Templates/Section50x50Image'));
+const Section50x50ServicesIntro = dynamic(() => import('./Templates/Section50x50ServicesIntro'));
+const SectionBigImage = dynamic(() => import('./Templates/SectionBigImage'));
+const SectionCaseStudyBeforeAndAfter = dynamic(() => import('./Templates/SectionCaseStudyBeforeAndAfter'));
+const SectionCaseStudyDoubleImage = dynamic(() => import('./Templates/SectionCaseStudyDoubleImage'));
+const SectionCaseStudyEdgeImageAndText = dynamic(() => import('./Templates/SectionCaseStudyEdgeImageAndText'));
+const SectionCaseStudyIframe = dynamic(() => import('./Templates/SectionCaseStudyIframe'));
+const SectionCaseStudyImagesSelection = dynamic(() => import('./Templates/SectionCaseStudyImagesSelection'));
+const SectionCaseStudyLandscapeAndText = dynamic(() => import('./Templates/SectionCaseStudyLandscapeAndText'));
+const SectionCaseStudyLargeImage = dynamic(() => import('./Templates/SectionCaseStudyLargeImage'));
+const SectionCaseStudyPortraitAndText = dynamic(() => import('./Templates/SectionCaseStudyPortraitAndText'));
+const SectionCaseStudyTestimonial = dynamic(() => import('./Templates/SectionCaseStudyTestimonial'));
+const SectionCaseStudyTripleImage = dynamic(() => import('./Templates/SectionCaseStudyTripleImage'));
+const SectionCaseStudyTwoImages = dynamic(() => import('./Templates/SectionCaseStudyTwoImages'));
+const SectionCenteredForm = dynamic(() => import('./Templates/SectionCenteredForm'));
+const SectionFaq = dynamic(() => import('./Templates/SectionFaq'));
+const SectionFeaturedCaseStudies = dynamic(() => import('./Templates/SectionFeaturedCaseStudies'));
+const SectionFeaturedCaseStudy = dynamic(() => import('./Templates/SectionFeaturedCaseStudy'));
+const SectionHeadingAndText = dynamic(() => import('./Templates/SectionHeadingAndText'));
+const SectionKnowledgeFaq = dynamic(() => import('./Templates/SectionKnowledgeFaq'));
+const SectionKnowledgeIframe = dynamic(() => import('./Templates/SectionKnowledgeIframe'));
+const SectionKnowledgeImage = dynamic(() => import('./Templates/SectionKnowledgeImage'));
+const SectionKnowledgeMap = dynamic(() => import('./Templates/SectionKnowledgeMap'));
+const SectionKnowledgePanningTextCta = dynamic(() => import('./Templates/SectionKnowledgePanningTextCta'));
+const SectionKnowledgeStandoutCta = dynamic(() => import('./Templates/SectionKnowledgeStandoutCta'));
+const SectionKnowledgeTable = dynamic(() => import('./Templates/SectionKnowledgeTable'));
+const SectionKnowledgeText = dynamic(() => import('./Templates/SectionKnowledgeText'));
+const SectionKnowledgeVideo = dynamic(() => import('./Templates/SectionKnowledgeVideo'));
+const SectionLatestKnowledge = dynamic(() => import('./Templates/SectionLatestKnowledge'));
+const SectionLocationAndMap = dynamic(() => import('./Templates/SectionLocationAndMap'));
+const SectionLogoGrid = dynamic(() => import('./Templates/SectionLogoGrid'));
+const SectionLogoTicker = dynamic(() => import('./Templates/SectionLogoTicker'));
+const SectionPanningText = dynamic(() => import('./Templates/SectionPanningText'));
+const SectionPreFooter = dynamic(() => import('./Templates/SectionPreFooter'));
+const SectionProcess = dynamic(() => import('./Templates/SectionProcess'));
+const SectionStandoutCta = dynamic(() => import('./Templates/SectionStandoutCta'));
+const SectionStandoutFeaturedContent = dynamic(() => import('./Templates/SectionStandoutFeaturedContent'));
+const SectionStandoutTestimonial = dynamic(() => import('./Templates/SectionStandoutTestimonial'));
+const SectionStory = dynamic(() => import('./Templates/SectionStory'));
+const SectionTeamListing = dynamic(() => import('./Templates/SectionTeamListing'));
+const SectionTextAndDoubleImage = dynamic(() => import('./Templates/SectionTextAndDoubleImage'));
+const SectionTextWithCta = dynamic(() => import('./Templates/SectionTextWithCta'));
+const SectionVideoCta = dynamic(() => import('./Templates/SectionVideoCta'));
 
 interface ContentTemplateComponent {
   _type: string;
@@ -78,8 +89,9 @@ interface Props {
   details?: ContentDetails;
 }
 
+// `next/dynamic` zwraca ComponentType<any>, nie FC - mapa musi to przyjac.
 type ContentTemplates = {
-  [key: string]: React.FC<ContentTemplateComponent>;
+  [key: string]: React.ComponentType<any>;
 };
 
 const headerTemplates: ContentTemplates = {

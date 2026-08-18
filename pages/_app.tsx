@@ -1,7 +1,7 @@
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
-import { useEffect } from 'react';
 import localFont from 'next/font/local';
+import { Roboto_Slab } from 'next/font/google';
 
 import '@/styles/globals.scss';
 import Layout from '@/components/Layout/Layout';
@@ -52,6 +52,27 @@ const fontArchivo = localFont({
   variable: '--font-archivo',
 });
 
+// ZMIANA 2026-08-18: Roboto Slab przeniesiony z <link rel=stylesheet> do
+// fonts.googleapis.com (patrz _document.tsx) na next/font/google.
+// Powody, po kolei:
+//  1. Tamten <link> byl arkuszem BLOKUJACYM RENDER na obcym originie - przed
+//     pierwszym pixelem trzeba bylo zrobic DNS + TCP + TLS do googleapis.com,
+//     pobrac CSS, a dopiero z niego wychodzil request po woff2 na gstatic.com
+//     (lancuch krytyczny o dlugosci 2 na obcych hostach). DevTools MCP wycenil
+//     bloker renderowania na 777 ms FCP.
+//  2. Mial `display=block`, czyli do 3 s niewidocznego tekstu; DevTools MCP
+//     osobno wycenil to na 475 ms FCP (insight FontDisplay).
+// next/font serwuje woff2 z wlasnego originu (to samo polaczenie H2 co reszta
+// strony, zero dodatkowych handshake'ow), wstrzykuje @font-face inline w HTML
+// i sam preloaduje plik. `display: 'swap'` + `adjustFontFallback` daja tekst
+// od razu, bez skoku layoutu przy podmianie fontu.
+const fontRobotoSlab = Roboto_Slab({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  display: 'swap',
+  variable: '--font-roboto-slab',
+});
+
 export const App = ({
   Component,
   pageProps,
@@ -59,17 +80,6 @@ export const App = ({
   useFullheightVieportCalculation();
   useAnimationOnScroll();
   useHashLinkScroll();
-
-  useEffect(() => {
-    const started = performance.now();
-    let acc = 0;
-    while (performance.now() - started < 300) {
-      acc += Math.sqrt(acc + 1);
-    }
-    if (acc < 0) {
-      console.log(acc);
-    }
-  }, []);
 
   return (
     <>
@@ -88,6 +98,8 @@ export const App = ({
                           {`
                             :root {
                               --font-archivo: ${fontArchivo.style.fontFamily};
+                              --font-roboto-slab: ${fontRobotoSlab.style
+                                .fontFamily};
                             }
                           `}
                         </style>
