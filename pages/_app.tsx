@@ -1,6 +1,5 @@
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
-import { useEffect } from 'react';
 import localFont from 'next/font/local';
 
 import '@/styles/globals.scss';
@@ -60,16 +59,12 @@ export const App = ({
   useAnimationOnScroll();
   useHashLinkScroll();
 
-  useEffect(() => {
-    const started = performance.now();
-    let acc = 0;
-    while (performance.now() - started < 300) {
-      acc += Math.sqrt(acc + 1);
-    }
-    if (acc < 0) {
-      console.log(acc);
-    }
-  }, []);
+  // REMOVED 2026-08-18: a `while (performance.now() - started < 300)` spin in a
+  // mount effect. It burned 300ms of wall-clock on the main thread on every
+  // single page view, immediately after hydration - i.e. squarely inside the
+  // LCP window - and its result (`acc`) was thrown away behind an `if (acc < 0)`
+  // that can never be true. Pure dead weight; under Lighthouse's 4x CPU throttle
+  // it is 1.2s of blocking. DO NOT RE-ADD.
 
   return (
     <>

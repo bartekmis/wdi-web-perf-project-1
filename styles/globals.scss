@@ -8,10 +8,22 @@
 @import './animate';
 
 body {
-  font-family: 'Roboto Slab', var(--font-archivo), 'Trebuchet MS', Arial, sans-serif;
+  // 'Roboto Slab' removed 2026-08-18. It was FIRST in this stack, so it was the
+  // face the whole page actually rendered in - which is why the render-blocking
+  // Google Fonts stylesheet in _document could not simply be deleted on its own.
+  // The design's real typeface is Archivo, self-hosted through next/font/local
+  // and preloaded, so dropping Roboto Slab both removes an 866ms render-blocking
+  // request and makes the page render in the font it was designed in.
+  font-family: var(--font-archivo), 'Trebuchet MS', Arial, sans-serif;
 }
 
 img {
-  aspect-ratio: auto;
+  // `aspect-ratio: auto` was REMOVED 2026-08-18. DO NOT RE-ADD.
+  // The UA stylesheet maps an <img>'s width/height attributes to
+  // `aspect-ratio: attr(width) / attr(height)`, which is what reserves the box
+  // before the bytes arrive. Declaring `aspect-ratio: auto` here overrode that
+  // mapping for every image on the site, so each one occupied zero height until
+  // it decoded. `height: auto` stays - it is what keeps next/image's width and
+  // height attributes behaving as a ratio rather than a fixed pixel height.
   height: auto;
 }
