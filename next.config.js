@@ -32,47 +32,39 @@ const nextConfig = {
     // CLS wazy 25% wyniku, FCP i SI po 10%, a na szybkim laczu FCP i tak jest
     // niskie bez tej sztuczki - wiec bilans wychodzi wyraznie na minus.
   },
-  // ZMIANA 2026-08-18: `no-transform` na trasach HTML.
+  // ZBADANE I PORZUCONE 2026-08-18: proba wylaczenia wstrzykiwania skryptu
+  // bot-detection przez Cloudflare naglowkiem `Cache-Control: no-transform`.
+  // NIE PROBOWAC PONOWNIE Z POZIOMU APLIKACJI - to slepa uliczka, ale warto
+  // wiedziec, ze sam mechanizm DZIALA.
   //
-  // Cloudflare doklejal do kazdej odpowiedzi HTML snippet `window.__CF$cv$params`,
-  // ktory laduje /cdn-cgi/challenge-platform/scripts/jsd/main.js (JS Detections
-  // z Bot Management). Ten jeden skrypt wykonywal sie jako pojedyncze dlugie
-  // zadanie ~420 ms i odpowiadal za CALA roznice w wyniku Lighthouse przy
-  // Moto G Power / Fast 4G: 85 punktow z nim, 100 bez niego (TBT 568 ms vs 10 ms).
-  // Z poziomu aplikacji nie da sie go odroczyc - wstrzykiwany jest na brzegu,
-  // juz po naszej odpowiedzi.
+  // Co jest grane: Cloudflare doklejal do kazdej odpowiedzi HTML snippet
+  // `window.__CF$cv$params`, ktory laduje
+  // /cdn-cgi/challenge-platform/scripts/jsd/main.js ("jsd" = JavaScript
+  // Detections). Wykonuje sie jako jedno dlugie zadanie ~420 ms i to CALA
+  // roznica w Lighthouse przy Moto G Power / Fast 4G:
+  //   85 punktow z nim  (TBT 568 ms)
+  //  100 punktow bez niego (TBT 10 ms, CLS 0, LCP 1556 ms) - 3/3 przebiegi
   //
-  // `Cache-Control: no-transform` to udokumentowany przez Cloudflare wylacznik
-  // modyfikacji odpowiedzi. Czy obejmuje takze to wstrzykniecie - sprawdzone
-  // eksperymentalnie na /theme, zanim ruszylem strone glowna:
-  //   /theme z no-transform:  snippet NIE wystepuje, odpowiedz nadal skompresowana
-  //                           (2 752 B na lączu vs 16 893 B surowo)
-  //   / bez no-transform:     snippet obecny, cf-cache-status: MISS (czyli prosto
-  //                           z originu, a nie ze starego cache'u)
-  // Kompresja na brzegu dziala dalej - to byla glowna obawa przy tym naglowku.
+  // `no-transform` FAKTYCZNIE go wylacza i NIE psuje kompresji na brzegu.
+  // Zmierzone na piaciu trasach naraz:
+  //   /theme  (bez getStaticProps, czysto statyczna)  no-transform obecny -> snippetu NIE ma
+  //   /, /contact, /knowledge, /case-studies (ISR)    bez niego           -> snippet jest
+  //   /theme na lączu: 2 752 B skompresowane vs 16 893 B surowo
   //
-  // Wartosc jest DOKLADNIE ta, ktora Next ustawia sam dla ISR, plus `no-transform`.
-  // `s-maxage=60` odpowiada `revalidate: 60` z getStaticProps, wiec Cloudflare
-  // nadal cache'uje strone na brzegu (cf-cache-status: HIT, TTFB ~60 ms).
-  // Gdyby to zgubic, kazde wejscie szloby do originu, ktory ma TTFB ~500 ms.
+  // Dlaczego mimo to sie nie da: strony z `revalidate` (ISR) dostaja
+  // Cache-Control od Next.js w momencie odpowiedzi i to nadpisuje wszystko.
+  // Sprawdzone oboma droga:
+  //   - `headers()` tutaj      -> zadzialalo TYLKO na /theme
+  //   - `middleware.ts`        -> middleware sie wykonuje (znacznik `x-mw: 1`
+  //                               wraca w odpowiedzi), ale Cache-Control i tak
+  //                               jest nadpisany przez Next
+  // Next dokumentuje to wprost: Cache-Control dla stron nie da sie ustawic
+  // z konfiguracji.
   //
-  // Zakres celowo omija /_next/ i /api/ - pliki statyczne maja wlasny,
-  // niezmienny Cache-Control (max-age=31536000, immutable) i nie ma powodu
-  // go nadpisywac.
-  async headers() {
-    return [
-      {
-        source: '/((?!_next/|api/).*)',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value:
-              'max-age=31536000, s-maxage=60, stale-while-revalidate, no-transform',
-          },
-        ],
-      },
-    ];
-  },
+  // Gdzie to naprawic: po stronie Cloudflare - przelacznik
+  // Security -> Bots -> JavaScript Detections (to osobna opcja niz Bot Fight
+  // Mode; wylaczenie samego Bot Fight Mode NIE zatrzymalo wstrzykiwania),
+  // albo Transform Rule dokladajaca `no-transform` do Cache-Control.
   staticPageGenerationTimeout: 7200,
   reactStrictMode: true,
   images: {
