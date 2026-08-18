@@ -53,8 +53,19 @@ jobs:
       # them next to server.js so the shipped bundle can serve on its own.
       - name: Assemble standalone bundle
         run: |
+          set -euo pipefail
           cp -r .next/static .next/standalone/.next/static
           if [ -d public ]; then cp -r public .next/standalone/public; fi
+
+          # Guard added 2026-08-18 after a deploy left the server running a new
+          # build whose JS chunks were not on disk: every /_next/static/chunks/*
+          # returned 404 while /_next/static/css/* and /public served fine, so
+          # the HTML rendered but nothing hydrated - no headings, no sections.
+          # A bundle without chunks is not shippable; fail here instead.
+          test -d .next/standalone/.next/static/chunks
+          CHUNKS=$(find .next/standalone/.next/static/chunks -name '*.js' | wc -l | tr -d ' ')
+          echo "static/chunks JS files: $CHUNKS"
+          test "$CHUNKS" -gt 0
 
       - name: Configure SSH
         env:
@@ -87,7 +98,19 @@ jobs:
           # --delete removes files no longer in the build; .env lives outside
           # this tree (written in the next step) so it is never touched.
           ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" "mkdir -p '$DEPLOY_PATH/current'"
-          rsync -az --delete \
+          # `--delete` REMOVED 2026-08-18. DO NOT PUT IT BACK without a
+          # two-directory (build-then-symlink-swap) release layout.
+          # Assets here are content-hashed, so a new build never overwrites an
+          # old file - it only adds. `--delete` bought nothing except a window,
+          # from the first deleted file until PM2 finished reloading, in which
+          # the running server's own chunks were gone from disk. Anyone loading
+          # the site in that window got HTML pointing at 404s. Worse, if a sync
+          # ends early for any reason, `--delete` has already destroyed the
+          # assets the currently-running build needs, and the site stays broken
+          # until the next successful deploy.
+          # Without it a partial sync is harmless: old files keep serving until
+          # the new ones are fully in place and PM2 swaps over.
+          rsync -az \
             -e "ssh $SSH_OPTS" \
             .next/standalone/ \
             "$SSH_USER@$SSH_HOST:$DEPLOY_PATH/current/"
@@ -134,3 +157,36 @@ jobs:
           # first deploy and does a zero-downtime reload on subsequent ones.
           ssh $SSH_OPTS "$SSH_USER@$SSH_HOST" \
             "cd '$DEPLOY_PATH' && pm2 startOrReload ecosystem.config.js --update-env && pm2 save"
+
+      # Added 2026-08-18. The deploy that broke the site reported success:
+      # rsync was fine, PM2 reloaded, the homepage returned 200 - and every
+      # script tag in that 200 pointed at a 404. Nothing in the pipeline looked
+      # at what the site actually served. This step does.
+      - name: Smoke test the deployed page
+        run: |
+          set -euo pipefail
+          URL="https://wdi-wow.online/"
+
+          # Give PM2 a moment to finish swapping the process.
+          sleep 15
+
+          HTML=$(curl -fsS --max-time 30 "$URL")
+          BUILD_ID=$(printf '%s' "$HTML" | grep -o '"buildId":"[^"]*"' | head -1)
+          echo "serving $BUILD_ID"
+
+          # Every script the page asks for must actually exist. Cache-bust so we
+          # are testing the origin and not an old edge-cached copy.
+          FAILED=0
+          for PATH_ONLY in $(printf '%s' "$HTML" | grep -o '/_next/static/[^"]*\.js' | sort -u); do
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "${URL%/}${PATH_ONLY}?deploycheck=$GITHUB_RUN_ID")
+            if [ "$CODE" != "200" ]; then
+              echo "::error::$CODE for $PATH_ONLY"
+              FAILED=$((FAILED + 1))
+            fi
+          done
+
+          if [ "$FAILED" -gt 0 ]; then
+            echo "::error::$FAILED script(s) referenced by the homepage are missing on the server."
+            exit 1
+          fi
+          echo "all referenced scripts served 200"
