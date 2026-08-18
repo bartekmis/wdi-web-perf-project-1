@@ -26,11 +26,19 @@ type MediaItem = {
 // LCP 1251 ms, z czego 450 ms to samo "load delay", czyli czekanie na
 // odkrycie zasobu. `priority` daje <link rel=preload> w <head> i fetchpriority=high.
 //
-// `quality` zbite z domyslnych 90 na 60. Krzywa zmierzona na obrazku LCP
+// `quality` zbite z domyslnych 90 na 50. Krzywa zmierzona na obrazku LCP
 // (w=640, AVIF): q=90 43,2 KB / q=72 39,7 KB / q=65 36,9 KB / q=60 34,3 KB /
-// q=50 28,0 KB. Przy AVIF-ie q=60 na kadrze 640 px na telefonie jest
-// nieodroznialne od q=90, a to jedyny zasob, ktorego WLASNY czas pobierania
-// jest metryka LCP (resourceLoadDuration to 2072 ms z 2853 ms calego LCP).
+// q=55 33,5 KB / q=50 28,0 KB / q=45 25,5 KB. Miedzy 55 a 50 jest uskok
+// (-5,5 KB), wiec 50 to naturalne miejsce na tej krzywej.
+//
+// Dlaczego to bezpieczne akurat tutaj: hero i tak jest podskalowany w gore.
+// Zmierzone na zywej stronie (DevTools MCP, Moto G Power): ramka ma 330x428 px
+// CSS, czyli 577x750 px urzadzenia przy DPR 1,75, a pobieramy 640x427.
+// Do tego `object-fit: cover` przycina go w poziomie - widac 330 z 641 px,
+// czyli 49% pobranych pikseli nigdy nie trafia na ekran. Przy takim materiale
+// roznica q=50 vs q=60 jest niewidoczna (porownane wizualnie), a to jedyny
+// zasob, ktorego WLASNY czas pobierania jest metryka LCP: resourceLoadDuration
+// to 2008 ms z 2802 ms calego LCP.
 const imgixLoader = ({ src, width, quality }: any) => {
   const url = new URL(`${process.env.NEXT_PUBLIC_IMGIX_URL}${src}`);
   const params = url.searchParams;
@@ -121,7 +129,7 @@ const ContentImage = forwardRef(function ContentImage(
           height={item.mediaDetails.height}
           priority={!!priority}
           loading={priority ? 'eager' : 'lazy'}
-          quality={60}
+          quality={50}
           id={elementId || ''}
           data-sampler={dataSampler || ''}
           sizes={sizes || ''}
@@ -139,7 +147,7 @@ const ContentImage = forwardRef(function ContentImage(
           height={item.mediaDetails.height}
           priority={!!priority}
           loading={priority ? 'eager' : 'lazy'}
-          quality={60}
+          quality={50}
           id={elementId || ''}
           data-sampler={elementId || ''}
           sizes={sizes || ''}
