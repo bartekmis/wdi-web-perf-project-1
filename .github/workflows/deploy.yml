@@ -187,31 +187,61 @@ jobs:
       # rsync was fine, PM2 reloaded, the homepage returned 200 - and every
       # script tag in that 200 pointed at a 404. Nothing in the pipeline looked
       # at what the site actually served. This step does.
+      #
+      # It must distinguish two very different non-200s. A 404/5xx means the
+      # file is genuinely missing and the deploy is broken - fail. A 403/429 is
+      # Cloudflare bot protection turning away a request from a datacentre IP;
+      # that says nothing about the origin, so warn and pass rather than block a
+      # good deploy. (The first version of this step failed exactly that way:
+      # `curl: (22) The requested URL returned error: 403`.)
       - name: Smoke test the deployed page
         run: |
-          set -euo pipefail
-          URL="https://wdi-wow.online/"
+          set -uo pipefail
+          URL="https://wdi-wow.online"
+          UA="Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
 
-          # Give PM2 a moment to finish swapping the process.
+          # Let PM2 finish swapping the process.
           sleep 15
 
-          HTML=$(curl -fsS --max-time 30 "$URL")
-          BUILD_ID=$(printf '%s' "$HTML" | grep -o '"buildId":"[^"]*"' | head -1)
-          echo "serving $BUILD_ID"
-
-          # Every script the page asks for must actually exist. Cache-bust so we
-          # are testing the origin and not an old edge-cached copy.
-          FAILED=0
-          for PATH_ONLY in $(printf '%s' "$HTML" | grep -o '/_next/static/[^"]*\.js' | sort -u); do
-            CODE=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "${URL%/}${PATH_ONLY}?deploycheck=$GITHUB_RUN_ID")
-            if [ "$CODE" != "200" ]; then
-              echo "::error::$CODE for $PATH_ONLY"
-              FAILED=$((FAILED + 1))
-            fi
-          done
-
-          if [ "$FAILED" -gt 0 ]; then
-            echo "::error::$FAILED script(s) referenced by the homepage are missing on the server."
+          HTTP=$(curl -sS -A "$UA" -o page.html -w '%{http_code}' --max-time 30 "$URL/" || echo 000)
+          if [ "$HTTP" = "403" ] || [ "$HTTP" = "429" ]; then
+            echo "::warning::Cloudflare answered $HTTP to the runner - skipping smoke test (this is edge bot protection, not a deploy failure)."
+            exit 0
+          fi
+          if [ "$HTTP" != "200" ]; then
+            echo "::error::homepage returned $HTTP"
             exit 1
           fi
-          echo "all referenced scripts served 200"
+
+          BUILD_ID=$(grep -o '"buildId":"[^"]*"' page.html | head -1)
+          echo "serving $BUILD_ID"
+
+          SCRIPTS=$(grep -o '/_next/static/[^"]*\.js' page.html | sort -u)
+          if [ -z "$SCRIPTS" ]; then
+            echo "::error::homepage references no /_next/static scripts at all"
+            exit 1
+          fi
+
+          MISSING=0
+          BLOCKED=0
+          CHECKED=0
+          for P in $SCRIPTS; do
+            # Cache-bust so this tests the origin and not an old edge-cached copy.
+            CODE=$(curl -s -A "$UA" -o /dev/null -w '%{http_code}' --max-time 20 "$URL$P?deploycheck=$GITHUB_RUN_ID")
+            CHECKED=$((CHECKED + 1))
+            case "$CODE" in
+              200) ;;
+              403|429) BLOCKED=$((BLOCKED + 1)) ;;
+              *) echo "::error::$CODE for $P"; MISSING=$((MISSING + 1)) ;;
+            esac
+          done
+
+          echo "checked $CHECKED script(s): $MISSING missing, $BLOCKED blocked by the edge"
+          if [ "$MISSING" -gt 0 ]; then
+            echo "::error::$MISSING script(s) referenced by the homepage are missing on the server - the page will not hydrate."
+            exit 1
+          fi
+          if [ "$BLOCKED" -gt 0 ]; then
+            echo "::warning::$BLOCKED request(s) were answered 403/429 by Cloudflare and could not be verified."
+          fi
+          echo "all reachable scripts served 200"
