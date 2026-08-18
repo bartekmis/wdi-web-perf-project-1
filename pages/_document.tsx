@@ -24,7 +24,7 @@ export default function Document() {
 
         {/* ZMIANA 2026-08-18: preconnect do fonts.googleapis.com i
             fonts.gstatic.com USUNIETE razem z arkuszem Roboto Slab - font jest
-            teraz self-hostowany przez next/font/google (patrz _app.tsx), wiec
+            teraz self-hostowany z pliku w repo przez next/font/local (patrz _app.tsx), wiec
             zaden z tych originow nie jest juz dotykany.
             W ich miejsce preconnect do imgix - stamtad leci obrazek LCP,
             a byl to jedyny obcy origin na sciezce krytycznej renderu. */}
@@ -54,7 +54,7 @@ export default function Document() {
 
         {/* REMOVED 2026-08-18: <link rel="stylesheet"> do
             fonts.googleapis.com/css2?family=Roboto+Slab...&display=block.
-            NIE PRZYWRACAC - font jest self-hostowany przez next/font/google
+            NIE PRZYWRACAC - font jest self-hostowany przez next/font/local
             w _app.tsx. Arkusz byl blokujacy render, na obcym originie i tworzyl
             lancuch krytyczny googleapis -> gstatic. DevTools MCP (cold cache,
             Moto G Power, Fast 4G, CPU 4x) wycenil blokery renderowania na

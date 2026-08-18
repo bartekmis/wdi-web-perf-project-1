@@ -1,7 +1,6 @@
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import localFont from 'next/font/local';
-import { Roboto_Slab } from 'next/font/google';
 
 import '@/styles/globals.scss';
 import Layout from '@/components/Layout/Layout';
@@ -68,34 +67,41 @@ const fontArchivo = localFont({
   preload: false,
 });
 
-// ZMIANA 2026-08-18: Roboto Slab przeniesiony z <link rel=stylesheet> do
-// fonts.googleapis.com (patrz _document.tsx) na next/font/google.
+// ZMIANA 2026-08-18: Roboto Slab zszedl z <link rel=stylesheet> do
+// fonts.googleapis.com (patrz _document.tsx) na plik hostowany u nas.
 // Powody, po kolei:
 //  1. Tamten <link> byl arkuszem BLOKUJACYM RENDER na obcym originie - przed
-//     pierwszym pixelem trzeba bylo zrobic DNS + TCP + TLS do googleapis.com,
+//     pierwszym pikselem trzeba bylo zrobic DNS + TCP + TLS do googleapis.com,
 //     pobrac CSS, a dopiero z niego wychodzil request po woff2 na gstatic.com
 //     (lancuch krytyczny o dlugosci 2 na obcych hostach). DevTools MCP wycenil
-//     bloker renderowania na 777 ms FCP.
+//     blokery renderowania na 777 ms FCP.
 //  2. Mial `display=block`, czyli do 3 s niewidocznego tekstu; DevTools MCP
 //     osobno wycenil to na 475 ms FCP (insight FontDisplay).
-// next/font serwuje woff2 z wlasnego originu (to samo polaczenie H2 co reszta
-// strony, zero dodatkowych handshake'ow), wstrzykuje @font-face inline w HTML
-// i sam preloaduje plik. `display: 'swap'` + `adjustFontFallback` daja tekst
-// od razu, bez skoku layoutu przy podmianie fontu.
-const fontRobotoSlab = Roboto_Slab({
-  subsets: ['latin'],
-  weight: ['400', '500', '700'],
+//
+// POPRAWKA po nieudanym deployu: najpierw bylo tu `next/font/google`, ktore
+// pobiera woff2 W TRAKCIE BUILDU. Na runnerze GitHub Actions te requesty
+// poszly w ETIMEDOUT do fonts.gstatic.com i build sie wywalil
+// ("Failed to fetch `Roboto Slab` from Google Fonts"). Plik lezy wiec teraz
+// w repo i `next/font/local` bierze go z dysku - build nie ma juz zadnej
+// zaleznosci sieciowej, a wynik dla przegladarki jest identyczny.
+//
+// To jeden plik zmiennego kroju (os wagi 400-700), subset `latin` - dokladnie
+// ten sam, ktory pobieral wczesniej next/font/google.
+const fontRobotoSlab = localFont({
+  src: '../assets/fonts/RobotoSlab-Variable-latin.woff2',
+  weight: '400 700',
+  style: 'normal',
   display: 'swap',
   variable: '--font-roboto-slab',
   // Roboto Slab renderuje CALY tekst na stronie, ale nadal nie preloadujemy go
   // z <head>. Element LCP to zdjecie w headerze, nie tekst, a jego
-  // `resourceLoadDuration` to 2811 ms z 3575 ms calego LCP - obrazek nie czeka
-  // na serwer, tylko dzieli pasmo z wszystkim innym. Font przy `display: swap`
-  // i metrykach fallbacku z `adjustFontFallback` nie blokuje pierwszego
-  // malowania: tekst pojawia sie od razu krojem zastepczym o dopasowanych
-  // metrykach (CLS = 0) i podmienia sie, gdy plik dojedzie.
+  // `resourceLoadDuration` to 2419 ms z 3212 ms calego LCP - obrazek nie czeka
+  // na serwer, tylko dzieli pasmo z wszystkim innym. Przy `display: swap`
+  // i metrykach fallbacku tekst pojawia sie od razu krojem zastepczym
+  // o dopasowanych metrykach (CLS = 0) i podmienia sie, gdy plik dojedzie.
   preload: false,
-});
+  adjustFontFallback: 'Times New Roman',
+})
 
 export const App = ({
   Component,
