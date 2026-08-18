@@ -51,21 +51,46 @@ jobs:
 
       # Standalone output does not include the static assets or /public — copy
       # them next to server.js so the shipped bundle can serve on its own.
+      # Standalone output does not include the static assets or /public - copy
+      # them next to server.js so the shipped bundle can serve on its own.
       - name: Assemble standalone bundle
         run: |
           set -euo pipefail
-          cp -r .next/static .next/standalone/.next/static
-          if [ -d public ]; then cp -r public .next/standalone/public; fi
 
-          # Guard added 2026-08-18 after a deploy left the server running a new
-          # build whose JS chunks were not on disk: every /_next/static/chunks/*
-          # returned 404 while /_next/static/css/* and /public served fine, so
-          # the HTML rendered but nothing hydrated - no headings, no sections.
-          # A bundle without chunks is not shippable; fail here instead.
-          test -d .next/standalone/.next/static/chunks
+          echo "--- what the build produced ---"
+          ls -la .next/ || true
+          ls -la .next/standalone/.next/ || true
+          echo "static/ subdirs: $(ls .next/static 2>/dev/null | tr '\n' ' ')"
+
+          test -d .next/standalone || { echo "::error::no .next/standalone - is output:'standalone' still set?"; exit 1; }
+          test -d .next/static     || { echo "::error::no .next/static - the build produced no client assets"; exit 1; }
+
+          # REWRITTEN 2026-08-18. This used to be a bare
+          #   cp -r .next/static .next/standalone/.next/static
+          # which is only correct while the destination does NOT exist. `cp -r src dst`
+          # copies src INTO dst once dst is a directory, producing
+          # .next/standalone/.next/static/static/chunks/... - so every
+          # /_next/static/chunks/*.js 404s while the HTML still references it.
+          # That is exactly how the site ended up styled but unhydrated.
+          # `cp -R src/. dst/` copies the CONTENTS and gives the same layout either way.
+          rm -rf .next/standalone/.next/static .next/standalone/public
+          mkdir -p .next/standalone/.next/static
+          cp -R .next/static/. .next/standalone/.next/static/
+          if [ -d public ]; then
+            mkdir -p .next/standalone/public
+            cp -R public/. .next/standalone/public/
+          fi
+
+          # A bundle whose chunks are missing or nested renders HTML that points
+          # at 404s and never hydrates. Fail here rather than shipping it.
+          test ! -d .next/standalone/.next/static/static \
+            || { echo "::error::nested static/static - assembly is wrong"; exit 1; }
+          test -d .next/standalone/.next/static/chunks \
+            || { echo "::error::no static/chunks in the assembled bundle"; exit 1; }
           CHUNKS=$(find .next/standalone/.next/static/chunks -name '*.js' | wc -l | tr -d ' ')
-          echo "static/chunks JS files: $CHUNKS"
-          test "$CHUNKS" -gt 0
+          echo "assembled static/chunks JS files: $CHUNKS"
+          test "$CHUNKS" -gt 0 \
+            || { echo "::error::static/chunks is empty"; exit 1; }
 
       - name: Configure SSH
         env:
