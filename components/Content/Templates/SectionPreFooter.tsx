@@ -1,8 +1,6 @@
 import Link from 'next/link';
-import { useContext, useEffect, useRef } from 'react';
+import { useContext, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { gsap } from 'gsap';
-import ScrollTrigger from 'gsap/dist/ScrollTrigger';
 
 import {
   getSectionSettings,
@@ -16,12 +14,11 @@ import Decoration from '@/components/Components/Decoration';
 import { PartialsContext } from '@/contexts/partials';
 import { PartialsData } from '@/types/partials';
 import ContentImage from '@/components/Components/ContentImage';
+import useDesktopScrollEffect from '@/hooks/desktop-scroll-effect';
 
 const SectionPreFooter = ({ data }: { data: any }) => {
   const partials = useContext(PartialsContext) as PartialsData;
   const pathname = usePathname();
-
-  gsap.registerPlugin(ScrollTrigger);
 
   const sectionSettings: SectionSettings = {
     bgColour: data.section_background_colour,
@@ -35,21 +32,23 @@ const SectionPreFooter = ({ data }: { data: any }) => {
   const parentRef = useRef<HTMLElement>(null);
   const dotsRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.to(dotsRef.current, {
-        scrollTrigger: {
-          trigger: parentRef.current,
-          scrub: 1,
-          start: 'top-=500 top',
-          end: 'top top',
-        },
-        right: '0%',
-      });
-    }, parentRef);
-
-    return () => ctx.revert();
-  }, [pathname]);
+  // Parallax siatki kropek - dekoracja, tylko desktop, gsap doładowywany
+  // dynamicznie (patrz hooks/desktop-scroll-effect.ts).
+  useDesktopScrollEffect(
+    (gsap) =>
+      gsap.context(() => {
+        gsap.to(dotsRef.current, {
+          scrollTrigger: {
+            trigger: parentRef.current,
+            scrub: 1,
+            start: 'top-=500 top',
+            end: 'top top',
+          },
+          right: '0%',
+        });
+      }, parentRef),
+    [pathname]
+  );
 
   return (
     <section

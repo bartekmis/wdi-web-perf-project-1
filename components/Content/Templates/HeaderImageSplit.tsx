@@ -1,8 +1,6 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ReactNode, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { gsap } from 'gsap';
-import ScrollTrigger from 'gsap/dist/ScrollTrigger';
 
 import Button from '@/components/Components/Button';
 import styles from '@/styles/headers/header-image-split.module.scss';
@@ -13,12 +11,11 @@ import {
 } from '@/lib/theme-utils';
 import { ConditionalWrapper } from '@/lib/helper-utils';
 import ContentImage from '@/components/Components/ContentImage';
-import useDetectDevice from '@/hooks/detect-device';
 import Device from '@/components/Components/Device';
+import useDesktopScrollEffect from '@/hooks/desktop-scroll-effect';
 
 const HeaderImageSplit = ({ data }: any) => {
   const pathname = usePathname();
-  gsap.registerPlugin(ScrollTrigger);
 
   const variants: any = {
     0: '',
@@ -37,112 +34,84 @@ const HeaderImageSplit = ({ data }: any) => {
   const [bannerEffectRef2, setBannerEffectRef2] = useState<any>(null);
   const [swipeEffectRef, setSwipeEffectRef] = useState<any>(null);
 
-  const currentDevice = useDetectDevice();
-  const isMobile = currentDevice.isMobile();
+  // ZMIANA 2026-08-18: wszystkie efekty tego headera ida teraz przez
+  // `useDesktopScrollEffect` - odpalaja sie tylko na desktopie i dociagaja gsap-a
+  // dynamicznym importem.
+  //
+  // Trzy pierwsze efekty (wjazd kola, kropek, przesloniecie obrazka) i tak juz
+  // mialy `if (isMobile) return`, wiec na telefonie nie robily NIC - a mimo to
+  // statyczny `import { gsap }` wciagal cala biblioteke z ScrollTriggerem do
+  // bundle'a kazdego urzadzenia.
+  //
+  // Czwarty efekt - parallax bannera, kola i siatki kropek - jako jedyny NIE
+  // sprawdzal urzadzenia i chodzil rowniez na telefonie. To trzy ScrollTriggery
+  // ze `scrub`, czyli praca doczepiona do kazdej klatki scrolla, na elementach
+  // siedzacych bezposrednio nad obrazkiem LCP.
+  // Lighthouse 13 (mobile, Moto G Power) przypisal chunkowi z gsapem 2516 ms
+  // `bootup-time` - najwiecej ze wszystkiego na stronie.
+  //
+  // Dekoracje w tym headerze startuja z widocznego stanu (gsap.fromTo sam
+  // ustawia stan poczatkowy), wiec pominiecie animacji na telefonie niczego
+  // nie ukrywa.
+  useDesktopScrollEffect(
+    (gsap) =>
+      gsap.context(() => {
+        // circle scale in
+        gsap.fromTo(circleRef.current, { scale: 0 }, { scale: 1, duration: 1 });
 
-  useEffect(() => {
-    if (isMobile) {
-      return;
-    }
+        // dots fade in
+        gsap.fromTo(dotsRef.current, { opacity: 0 }, { opacity: 1, duration: 1 });
 
-    // circle scale in
-    gsap.fromTo(
-      circleRef.current,
-      { scale: 0 },
-      {
-        scale: 1,
-        duration: 1,
-      }
-    );
-
-    // dots fade in
-    gsap.fromTo(
-      dotsRef.current,
-      { opacity: 0 },
-      {
-        opacity: 1,
-        duration: 1,
-      }
-    );
-  }, [pathname, isMobile]);
-
-  useEffect(() => {
-    if (isMobile) {
-      return;
-    }
-
-    // basic image loading effect
-    if (swipeEffectRef) {
-      gsap.fromTo(
-        swipeEffectRef,
-        { xPercent: -100 },
-        {
-          xPercent: 100,
-          duration: 1,
+        // basic image loading effect
+        if (swipeEffectRef) {
+          gsap.fromTo(
+            swipeEffectRef,
+            { xPercent: -100 },
+            { xPercent: 100, duration: 1 }
+          );
         }
-      );
-    }
-  }, [pathname, isMobile, swipeEffectRef]);
 
-  useEffect(() => {
-    if (isMobile) {
-      return;
-    }
+        // banner image loading effect
+        if (bannerEffectRef1 && bannerEffectRef2) {
+          gsap.to(bannerEffectRef1, { x: 0, opacity: 0, duration: 1 });
+          gsap.to(bannerEffectRef2, { x: 0, opacity: 0, duration: 1 });
+        }
 
-    // banner image loading effect
-    if (bannerEffectRef1 && bannerEffectRef2) {
-      gsap.to(bannerEffectRef1, {
-        x: 0,
-        opacity: 0,
-        duration: 1,
-      });
+        // banner image parallax
+        gsap.to(bannerGroupRef.current, {
+          scrollTrigger: {
+            trigger: parentRef.current,
+            scrub: 1,
+            start: 'top top',
+            end: 'center top',
+          },
+          yPercent: 23,
+        });
 
-      gsap.to(bannerEffectRef2, {
-        x: 0,
-        opacity: 0,
-        duration: 1,
-      });
-    }
-  }, [pathname, isMobile, bannerEffectRef1, bannerEffectRef2]);
+        // circle parallax
+        gsap.to(circleRef.current, {
+          scrollTrigger: {
+            trigger: parentRef.current,
+            scrub: 1,
+            start: 'top top',
+            end: 'center top',
+          },
+          x: '-73vw',
+        });
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      // banner image parallax
-      gsap.to(bannerGroupRef.current, {
-        scrollTrigger: {
-          trigger: parentRef.current,
-          scrub: 1,
-          start: 'top top',
-          end: 'center top',
-        },
-        yPercent: 23,
-      });
-
-      // circle parallax
-      gsap.to(circleRef.current, {
-        scrollTrigger: {
-          trigger: parentRef.current,
-          scrub: 1,
-          start: 'top top',
-          end: 'center top',
-        },
-        x: '-73vw',
-      });
-
-      // dots grid parallax
-      gsap.to(dotsRef.current, {
-        scrollTrigger: {
-          trigger: parentRef.current,
-          scrub: 1,
-          start: 'top top',
-          end: 'center top',
-        },
-        yPercent: -25,
-      });
-    }, parentRef);
-
-    return () => ctx.revert();
-  }, [pathname]);
+        // dots grid parallax
+        gsap.to(dotsRef.current, {
+          scrollTrigger: {
+            trigger: parentRef.current,
+            scrub: 1,
+            start: 'top top',
+            end: 'center top',
+          },
+          yPercent: -25,
+        });
+      }, parentRef),
+    [pathname, swipeEffectRef, bannerEffectRef1, bannerEffectRef2]
+  );
 
   return (
     <header

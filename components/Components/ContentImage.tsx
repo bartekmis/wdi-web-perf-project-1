@@ -32,7 +32,11 @@ type MediaItem = {
 const imgixLoader = ({ src, width, quality }: any) => {
   const url = new URL(`${process.env.NEXT_PUBLIC_IMGIX_URL}${src}`);
   const params = url.searchParams;
-  params.set('auto', params.getAll('auto').join(',') || 'format');
+  // `compress` obok `format`: imgix dobiera stopien kompresji do zawartosci
+  // kadru, zamiast trzymac staly q dla kazdego zdjecia. Na tej stronie liczy sie
+  // to podwojnie - obrazek LCP mial `resourceLoadDuration` 2811 ms z 3575 ms
+  // calego LCP, czyli caly problem to bajty w locie, a nie czas serwera.
+  params.set('auto', params.getAll('auto').join(',') || 'format,compress');
   params.set('fit', params.get('fit') || 'max');
   params.set('w', params.get('w') || width.toString());
   params.set('q', (quality && quality.toString()) || '90');

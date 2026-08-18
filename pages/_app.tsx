@@ -50,6 +50,22 @@ const fontArchivo = localFont({
     },
   ],
   variable: '--font-archivo',
+  // ZMIANA 2026-08-18: `preload: false`.
+  // Archivo nie renderuje sie NIGDZIE. Sprawdzone na zywej stronie przez
+  // DevTools MCP: z 372 elementow z tekstem wszystkie 372 licza sie do
+  // `__Roboto_Slab_*`, a `document.fonts` raportuje wszystkie trzy kroje
+  // Archivo jako "unloaded" po pelnym zaladowaniu strony. Powod: `body`
+  // ustawia Roboto Slab jako pierwszy krok w font-family, a nic nie uzywa
+  // tailwindowej klasy `font-sans`.
+  // Mimo to next/font preloadowal wszystkie trzy pliki woff2 (3 x ~18,5 KB
+  // = 55,5 KB) z priorytetem High, prosto w <head> - czyli w tym samym oknie,
+  // w ktorym sciaga sie blokujacy render CSS (18,9 KB) i obrazek LCP.
+  // Przy przepustowosci, jaka Lighthouse symuluje dla 4G, te 55,5 KB to
+  // ~280 ms zabrane pierwszemu malowaniu za font, ktorego nikt nie widzi.
+  // Deklaracja zostaje (gdyby ktoras strona jednak uzyla `font-sans`) -
+  // bez preloadu przegladarka pobierze plik tylko wtedy, gdy naprawde
+  // bedzie potrzebny.
+  preload: false,
 });
 
 // ZMIANA 2026-08-18: Roboto Slab przeniesiony z <link rel=stylesheet> do
@@ -71,6 +87,14 @@ const fontRobotoSlab = Roboto_Slab({
   weight: ['400', '500', '700'],
   display: 'swap',
   variable: '--font-roboto-slab',
+  // Roboto Slab renderuje CALY tekst na stronie, ale nadal nie preloadujemy go
+  // z <head>. Element LCP to zdjecie w headerze, nie tekst, a jego
+  // `resourceLoadDuration` to 2811 ms z 3575 ms calego LCP - obrazek nie czeka
+  // na serwer, tylko dzieli pasmo z wszystkim innym. Font przy `display: swap`
+  // i metrykach fallbacku z `adjustFontFallback` nie blokuje pierwszego
+  // malowania: tekst pojawia sie od razu krojem zastepczym o dopasowanych
+  // metrykach (CLS = 0) i podmienia sie, gdy plik dojedzie.
+  preload: false,
 });
 
 export const App = ({

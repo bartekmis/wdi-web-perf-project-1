@@ -1,7 +1,5 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import Link from 'next/link';
-import { gsap } from 'gsap';
-import ScrollTrigger from 'gsap/dist/ScrollTrigger';
 
 import {
   getSectionSettings,
@@ -17,10 +15,9 @@ import Button from '@/components/Components/Button';
 import Decoration from '@/components/Components/Decoration';
 import DecorationLine from '@/components/Components/DecorationLine';
 import Headline from '@/components/Components/Headline';
+import useDesktopScrollEffect from '@/hooks/desktop-scroll-effect';
 
 const SectionTextAndDoubleImage = ({ data }: { data: any }) => {
-  gsap.registerPlugin(ScrollTrigger);
-
   const sectionSettings: SectionSettings = {
     bgColour: data.section_background_colour,
     paddingTop: data.section_padding_top,
@@ -34,24 +31,19 @@ const SectionTextAndDoubleImage = ({ data }: { data: any }) => {
   const circleRef = useRef<HTMLDivElement>(null);
   const dotsRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const ctx = gsap.context(() => {
-      gsap.to(circleRef.current, {
-        scrollTrigger: {
-          trigger: parentRef.current,
-          start: 'top-=200 top',
-        },
-        scale: 1,
-      });
-
-      gsap.to(dotsRef.current, {
-        scrollTrigger: {
-          trigger: parentRef.current,
-          start: 'top-=200 top',
-        },
-        opacity: 1,
-      });
-
+  // Odsloniecie dekoracji (scale 0 -> 1, opacity 0 -> 1) zeszlo z gsap-a na
+  // wlasne klasy `animation-expandIn` / `animation-fadeIn`, ktore i tak sa juz
+  // w projekcie i chodza na zwyklym IntersectionObserverze (useAnimationOnScroll).
+  // Dzieki temu telefon w ogole nie pobiera gsap-a, a dekoracje nadal sie
+  // pojawiaja - wczesniej `scale-0` i `opacity-0` w klasach czekaly na gsap-a,
+  // wiec pominiecie go zostawiloby je niewidoczne.
+  // Keyframe `expandIn` animuje wlasciwosc `scale`, a nie `transform`, wiec nie
+  // gryzie sie z parallaxem ponizej, ktory rusza `y`.
+  //
+  // Sam parallax zostaje przy gsapie, ale tylko na desktopie i z dynamicznym
+  // importem - to efekt ze `scrub`, czyli praca w kazdej klatce scrolla.
+  useDesktopScrollEffect((gsap) =>
+    gsap.context(() => {
       gsap.to(circleRef.current, {
         scrollTrigger: {
           trigger: parentRef.current,
@@ -71,10 +63,8 @@ const SectionTextAndDoubleImage = ({ data }: { data: any }) => {
         },
         y: '96px',
       });
-    }, parentRef);
-
-    return () => ctx.revert();
-  }, []);
+    }, parentRef)
+  );
 
   return (
     <section
@@ -148,7 +138,7 @@ const SectionTextAndDoubleImage = ({ data }: { data: any }) => {
               type={1}
               colour={0}
               variant='custom'
-              className='w-[45%] pb-[45%] left-[-18px] top-[50%] translate-y-[-50%] md:left-[-48px] xl:left-[-96px] xl:w-[55%] xl:pb-[55%] scale-0'
+              className='w-[45%] pb-[45%] left-[-18px] top-[50%] translate-y-[-50%] md:left-[-48px] xl:left-[-96px] xl:w-[55%] xl:pb-[55%] animation-expandIn'
             />
 
             <Decoration
@@ -156,7 +146,7 @@ const SectionTextAndDoubleImage = ({ data }: { data: any }) => {
               type={2}
               colour={2}
               variant='custom'
-              className='w-[35%] pb-[35%] right-[18px] bottom-[18px] xl:right-[36px] xl:bottom-[36px] xl:w-[43%] xl:pb-[43%] 3xl:right-[48px] 3xl:bottom-[48px] z-[1] opacity-0'
+              className='w-[35%] pb-[35%] right-[18px] bottom-[18px] xl:right-[36px] xl:bottom-[36px] xl:w-[43%] xl:pb-[43%] 3xl:right-[48px] 3xl:bottom-[48px] z-[1] animation-fadeIn'
             />
           </div>
         </div>
