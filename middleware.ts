@@ -37,6 +37,12 @@ export function middleware(_request: NextRequest) {
     "max-age=31536000, s-maxage=60, stale-while-revalidate, no-transform"
   );
 
+  // DIAGNOSTYKA 2026-08-18: naglowek-znacznik, zeby rozstrzygnac, czy middleware
+  // w ogole sie wykonuje na tych trasach. Jesli `x-mw` jest w odpowiedzi, a
+  // `no-transform` nie - to Next nadpisuje Cache-Control dla stron ISR i tedy
+  // droga nie prowadzi. Jesli nie ma zadnego z nich - nie zgadza sie matcher.
+  response.headers.set("x-mw", "1");
+
   return response;
 }
 
