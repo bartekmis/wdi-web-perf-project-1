@@ -41,3 +41,4 @@ next-env.d.ts
 
 # Lokalne ustawienia Claude Code
 .claude/settings.local.json
+.perf-shots/

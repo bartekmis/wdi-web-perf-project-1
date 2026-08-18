@@ -12,6 +12,16 @@ const nextConfig = {
   output: 'standalone',
   experimental: {
     largePageDataBytes: 2048 * 1000,
+    // ZMIANA 2026-08-18: wbudowywanie krytycznego CSS-a (critters).
+    // FCP siedzi dokladnie na arkuszu: 5 blokujacych renderowanie plikow CSS
+    // (razem 23,2 KB) startuje o ~740 ms, najwiekszy konczy sie o 2342 ms,
+    // a FCP wypada o 2411 ms. Same pliki nie sa duze - one po prostu dziela
+    // pasmo z obrazkiem LCP, fontem i ~180 KB JS-a, ktore rusza w tej samej
+    // milisekundzie.
+    // `optimizeCss` wstrzykuje reguly potrzebne dla pierwszego ekranu prosto
+    // w HTML, a reszte arkuszy przelacza na ladowanie nieblokujace - dzieki
+    // czemu pierwsze malowanie przestaje czekac na osobny request.
+    optimizeCss: true,
   },
   staticPageGenerationTimeout: 7200,
   reactStrictMode: true,

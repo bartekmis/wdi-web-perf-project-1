@@ -26,17 +26,21 @@ type MediaItem = {
 // LCP 1251 ms, z czego 450 ms to samo "load delay", czyli czekanie na
 // odkrycie zasobu. `priority` daje <link rel=preload> w <head> i fetchpriority=high.
 //
-// `quality` zbite z domyslnych 90 na 72: imgix przy q=90 oddawal 42 KB AVIF-a
-// na kadr 640 px. Roznica 72 vs 90 jest niewidoczna na ekranie telefonu,
-// a wazy ok. 40% pliku.
+// `quality` zbite z domyslnych 90 na 60. Krzywa zmierzona na obrazku LCP
+// (w=640, AVIF): q=90 43,2 KB / q=72 39,7 KB / q=65 36,9 KB / q=60 34,3 KB /
+// q=50 28,0 KB. Przy AVIF-ie q=60 na kadrze 640 px na telefonie jest
+// nieodroznialne od q=90, a to jedyny zasob, ktorego WLASNY czas pobierania
+// jest metryka LCP (resourceLoadDuration to 2072 ms z 2853 ms calego LCP).
 const imgixLoader = ({ src, width, quality }: any) => {
   const url = new URL(`${process.env.NEXT_PUBLIC_IMGIX_URL}${src}`);
   const params = url.searchParams;
-  // `compress` obok `format`: imgix dobiera stopien kompresji do zawartosci
-  // kadru, zamiast trzymac staly q dla kazdego zdjecia. Na tej stronie liczy sie
-  // to podwojnie - obrazek LCP mial `resourceLoadDuration` 2811 ms z 3575 ms
-  // calego LCP, czyli caly problem to bajty w locie, a nie czas serwera.
-  params.set('auto', params.getAll('auto').join(',') || 'format,compress');
+  // COFNIETE 2026-08-18: probowalem tu `auto=format,compress`. NIE DODAWAC.
+  // Zmierzone na obrazku LCP (w=640, Accept: image/avif), rozmiar odpowiedzi:
+  //   q=72  format 39 727 B   format,compress 40 862 B
+  //   q=60  format 34 292 B   format,compress 35 314 B
+  // `auto=format` i tak oddaje juz AVIF-a; `compress` doklada wlasny przebieg,
+  // ktory na tym materiale konsekwentnie DODAJE ~1 KB zamiast oszczedzac.
+  params.set('auto', params.getAll('auto').join(',') || 'format');
   params.set('fit', params.get('fit') || 'max');
   params.set('w', params.get('w') || width.toString());
   params.set('q', (quality && quality.toString()) || '90');
@@ -117,7 +121,7 @@ const ContentImage = forwardRef(function ContentImage(
           height={item.mediaDetails.height}
           priority={!!priority}
           loading={priority ? 'eager' : 'lazy'}
-          quality={72}
+          quality={60}
           id={elementId || ''}
           data-sampler={dataSampler || ''}
           sizes={sizes || ''}
@@ -135,7 +139,7 @@ const ContentImage = forwardRef(function ContentImage(
           height={item.mediaDetails.height}
           priority={!!priority}
           loading={priority ? 'eager' : 'lazy'}
-          quality={72}
+          quality={60}
           id={elementId || ''}
           data-sampler={elementId || ''}
           sizes={sizes || ''}
