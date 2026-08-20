@@ -6,20 +6,18 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
-        {/* CookieYes (consent management).
-            ZMIANA 2026-08-18: dodane `defer`. Byl to zwykly, synchroniczny
-            <script> jako PIERWSZY element <head> - parser HTML zatrzymywal sie
-            na nim, zanim w ogole zobaczyl arkusze stylow i obrazek LCP.
-            `defer` zachowuje kolejnosc wykonania (CookieYes nadal startuje
-            przed czymkolwiek innym), ale nie blokuje juz parsera ani preload
-            scannera. GTM idzie teraz na `lazyOnload` (patrz Analytics.tsx),
-            wiec consent i tak jest gotowy przed pierwszym tagiem. */}
-        <script
-          id="cookieyes"
-          type="text/javascript"
-          defer
-          src="https://cdn-cookieyes.com/client_data/92a68bd2b7ccd68375efe4a3592b2d33/script.js"
-        ></script>
+        {/* USUNIETE 2026-08-20 na prosbe: CookieYes (consent management),
+            <script src="cdn-cookieyes.com/client_data/.../script.js">.
+            Wczesniej tego samego dnia dostal `defer` (byl synchroniczny i stal
+            jako PIERWSZY element <head>, wiec parser zatrzymywal sie na nim,
+            zanim zobaczyl arkusze stylow i obrazek LCP) - teraz znika calkiem.
+            Koszt, ktory znika razem z nim: 8,8 KB + 7,7 KB w oknie LCP
+            (plus ping do log.cookieyes.com) i ~39 ms blokowania watku glownego
+            w pomiarze WebPageTest.
+
+            UWAGA, jesli ktos to przywraca albo szuka bannera: to byla jedyna
+            obsluga zgod na cookies na stronie. Bez niej GTM (Analytics.tsx,
+            `lazyOnload`) i jego tagi odpalaja sie bez pytania o zgode. */}
         <meta name="robots" content="noindex, nofollow"></meta>
 
         {/* ZMIANA 2026-08-18: preconnect do fonts.googleapis.com i
